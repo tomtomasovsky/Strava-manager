@@ -400,7 +400,9 @@ const MONTHS_SK = ['Január','Február','Marec','Apríl','Máj','Jún','Júl','A
 
 const SPORT_MAP = {
   Ride:'Ride', VirtualRide:'Ride', EBikeRide:'Ride',
-  Run:'Run', VirtualRun:'Run',
+  MountainBikeRide:'Ride', EMountainBikeRide:'Ride',
+  GravelRide:'Ride', Velomobile:'Ride', Handcycle:'Ride',
+  Run:'Run', VirtualRun:'Run', TrailRun:'Run',
   WeightTraining:'WeightTraining', Workout:'WeightTraining', CrossFit:'WeightTraining',
   Hike:'Hike', Walk:'Hike',
 };
@@ -631,7 +633,7 @@ async function generateAISuggestions(){
   const tod=hour<10?'morning':hour<13?'midday':hour<17?'afternoon':'evening';
   const prompt=`You help a cyclist name Strava activities. Their recent activity names: ${rideNames.length?rideNames.join(', '):'(none yet)'}. New activity: ${dist}${dur?' / '+dur:''}${elev?' / '+elev+' elevation':''}, ${tod}. Generate exactly 3 short creative subtitle suggestions (NOT including the number prefix). English, energetic, personal, max 4 words. Respond ONLY with JSON array of 3 strings.`;
   try {
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${S.geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${S.geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
     const d=await r.json();
     const text=d.candidates?.[0]?.content?.parts?.[0]?.text||'[]';
     const suggestions=JSON.parse(text.replace(/```json|```/g,'').trim());

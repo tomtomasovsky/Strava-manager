@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="sk">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Strava Manager</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -20,233 +20,314 @@
   --success: #22c55e;
   --blue: #3b82f6;
   --radius: 10px;
+  --bottom-nav-h: 72px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html { scroll-behavior: smooth; }
-body { background: var(--dark); color: var(--text); font-family: 'Barlow', sans-serif; min-height: 100vh; }
+body {
+  background: var(--dark); color: var(--text);
+  font-family: 'Barlow', sans-serif; min-height: 100vh;
+  padding-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom));
+}
 
-.header { position: sticky; top: 0; z-index: 100; background: rgba(10,10,10,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 20px; padding: 0 20px; height: 58px; }
-.logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 1.35rem; letter-spacing: 2px; text-transform: uppercase; color: var(--orange); }
+/* ── HEADER ── */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,10,10,0.95); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 16px; height: 52px;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 1.25rem; letter-spacing: 2px; text-transform: uppercase; color: var(--orange); }
 .logo span { color: var(--text2); font-weight: 400; }
-.nav { display: flex; gap: 4px; margin-left: auto; }
-.nav-btn { background: none; border: none; color: var(--text2); font-family: 'Barlow', sans-serif; font-size: 0.83rem; font-weight: 500; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
-.nav-btn:hover { background: var(--card); color: var(--text); }
-.nav-btn.active { background: var(--orange); color: white; }
-.conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; transition: background 0.3s; }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.version { font-size: 0.68rem; color: var(--muted); }
+.conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
 .conn-dot.on { background: var(--success); box-shadow: 0 0 6px var(--success); }
 
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10,10,10,0.97); backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding-bottom: var(--safe-bottom);
+  height: calc(var(--bottom-nav-h) + var(--safe-bottom));
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; cursor: pointer; transition: opacity 0.15s;
+  background: none; border: none; padding: 8px 4px;
+  color: var(--muted); font-family: 'Barlow', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-item:active { opacity: 0.7; }
+.nav-item.active { color: var(--orange); }
+.nav-item .ni-icon { font-size: 1.6rem; line-height: 1; }
+.nav-item .ni-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── PAGES ── */
 .page { display: none; }
 .page.active { display: block; }
-.container { max-width: 820px; margin: 0 auto; padding: 28px 16px 60px; }
+.container { max-width: 680px; margin: 0 auto; padding: 20px 14px 20px; }
 
-.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; margin-bottom: 14px; }
-.card-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text2); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+/* ── CARDS ── */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 12px; }
+.card-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text2); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
 .card-title .accent { color: var(--orange); }
 
+/* ── FIELDS ── */
 .field { display: flex; flex-direction: column; gap: 5px; }
-.field label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
-.field input, .field select, .field textarea { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 14px; font-family: 'Barlow', sans-serif; font-size: 0.92rem; outline: none; transition: border 0.18s; width: 100%; }
+.field label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
+.field input, .field select, .field textarea {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); padding: 12px 14px; font-family: 'Barlow', sans-serif;
+  font-size: 1rem; outline: none; transition: border 0.18s; width: 100%;
+  -webkit-appearance: none;
+}
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--orange); }
 .field input::placeholder, .field textarea::placeholder { color: var(--muted); }
-.field select option { background: #1c1c1c; }
 textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-@media(max-width:560px){ .grid2,.grid3 { grid-template-columns: 1fr; } }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media(max-width:480px){ .grid3 { grid-template-columns: 1fr 1fr; } }
 
-.btn { display: inline-flex; align-items: center; gap: 7px; border: none; border-radius: 8px; padding: 10px 18px; font-family: 'Barlow', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s, transform 0.1s; white-space: nowrap; }
-.btn:hover { opacity: 0.85; transform: translateY(-1px); }
-.btn:active { transform: translateY(0); }
-.btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border: none; border-radius: 10px; padding: 12px 18px;
+  font-family: 'Barlow', sans-serif; font-size: 0.92rem; font-weight: 600;
+  cursor: pointer; transition: opacity 0.15s, transform 0.1s; white-space: nowrap;
+  min-height: 44px;
+}
+.btn:active { opacity: 0.75; transform: scale(0.98); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .btn-primary { background: var(--orange); color: white; }
 .btn-secondary { background: var(--card2); color: var(--text2); border: 1px solid var(--border2); }
-.btn-secondary:hover { color: var(--text); border-color: var(--muted); }
 .btn-success { background: var(--success); color: white; }
 .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
-.btn-ghost:hover { border-color: var(--border2); color: var(--text); }
-.btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+.btn-sm { padding: 8px 14px; font-size: 0.82rem; min-height: 36px; }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn-full { width: 100%; }
 
-.status { padding: 10px 14px; border-radius: 8px; font-size: 0.86rem; line-height: 1.5; margin-top: 12px; display: none; }
+/* ── STATUS ── */
+.status { padding: 10px 14px; border-radius: 8px; font-size: 0.86rem; line-height: 1.5; margin-top: 10px; display: none; }
 .status.show { display: block; }
 .status.info { background: rgba(59,130,246,0.12); color: #93c5fd; border: 1px solid rgba(59,130,246,0.2); }
 .status.success { background: rgba(34,197,94,0.12); color: #86efac; border: 1px solid rgba(34,197,94,0.2); }
 .status.error { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.2); }
 
-.spin { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.25); border-top-color: currentColor; border-radius: 50%; animation: spin 0.6s linear infinite; }
+.spin { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.25); border-top-color: currentColor; border-radius: 50%; animation: spin 0.6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.setup-steps { list-style: none; margin-bottom: 18px; }
-.setup-steps li { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; font-size: 0.88rem; color: #999; line-height: 1.6; }
-.setup-steps .sn { background: var(--orange); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
-.setup-steps a { color: var(--orange); text-decoration: none; }
-
-.security-note { background: rgba(252,76,2,0.07); border-left: 3px solid var(--orange); padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 0.82rem; color: #bbb; line-height: 1.6; margin-bottom: 16px; }
-.conn-badge { display: none; align-items: center; gap: 8px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25); border-radius: 8px; padding: 8px 14px; font-size: 0.84rem; color: #86efac; margin-top: 12px; }
-.conn-badge.show { display: flex; }
-.conn-badge .cdot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
-
+/* ── ACTIVITY LIST ── */
 .act-list { display: flex; flex-direction: column; gap: 8px; }
-.act-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.18s, background 0.18s; position: relative; }
-.act-item:hover { border-color: var(--border2); background: #1f1f1f; }
+.act-item {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px; display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: border-color 0.18s, background 0.18s; position: relative;
+  min-height: 72px;
+}
 .act-item.selected { border-color: var(--orange); background: rgba(252,76,2,0.05); }
-.act-item.done { opacity: 0.45; }
-.act-item.done::after { content: '✓ upravené'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: rgba(34,197,94,0.15); color: var(--success); border-radius: 20px; padding: 2px 10px; font-size: 0.72rem; font-weight: 600; }
-.act-emoji { font-size: 1.6rem; flex-shrink: 0; }
+.act-item.done { opacity: 0.4; }
+.act-item.done::after {
+  content: '✓'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: rgba(34,197,94,0.2); color: var(--success);
+  border-radius: 50%; width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;
+}
+.act-emoji { font-size: 1.8rem; flex-shrink: 0; }
 .act-info { flex: 1; min-width: 0; }
-.act-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+.act-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
 .act-meta { font-size: 0.76rem; color: var(--text2); display: flex; gap: 8px; flex-wrap: wrap; }
-.act-badge { font-size: 0.7rem; font-weight: 700; background: rgba(0,130,200,0.15); color: #60b0f0; border-radius: 4px; padding: 2px 7px; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; }
+.act-badge { font-size: 0.65rem; font-weight: 700; background: rgba(0,130,200,0.15); color: #60b0f0; border-radius: 4px; padding: 2px 7px; text-transform: uppercase; flex-shrink: 0; }
 
-.edit-panel { background: var(--card); border: 1px solid var(--orange); border-radius: var(--radius); padding: 22px; margin-top: 14px; display: none; }
+/* ── COUNTER GRID ── */
+.counter-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 16px; }
+@media(max-width:400px){ .counter-grid { grid-template-columns: repeat(2,1fr); } }
+.counter-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 6px; text-align: center; }
+.ct-emoji { font-size: 1.4rem; margin-bottom: 3px; }
+.ct-label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.ct-num { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--orange); }
+.ct-num.dim { color: var(--muted); font-size: 0.85rem; font-family: 'Barlow', sans-serif; }
+
+/* ── EDIT PANEL ── */
+.edit-panel { background: var(--card); border: 1px solid var(--orange); border-radius: var(--radius); padding: 18px; margin-top: 12px; display: none; }
 .edit-panel.show { display: block; }
 
-.name-preview { background: var(--surface); border: 1px dashed rgba(252,76,2,0.5); border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; }
-.name-preview .np-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-.name-preview .np-val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--orange); letter-spacing: 1px; word-break: break-word; }
+.name-preview { background: var(--surface); border: 1px dashed rgba(252,76,2,0.5); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
+.np-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.np-val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--orange); letter-spacing: 1px; word-break: break-word; }
 
-.num-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
-.num-row .num-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; flex: 1; }
-.num-row .num-controls { display: flex; align-items: center; gap: 8px; }
-.num-row .num-emoji { font-size: 1.2rem; }
-.num-row .num-hash { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--text2); }
-.num-row input[type=number] { width: 70px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--orange); background: transparent; border: none; outline: none; padding: 0; }
-.num-row .num-year { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--text2); }
+.num-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+.num-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; flex: 1; }
+.num-controls { display: flex; align-items: center; gap: 6px; }
+.num-emoji { font-size: 1.2rem; }
+.num-hash, .num-year { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--text2); }
+.num-row input[type=number] { width: 64px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--orange); background: transparent; border: none; outline: none; padding: 0; -webkit-appearance: none; }
 
+/* ── SPORT SELECT ── */
+.sport-select { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; margin-bottom: 12px; }
+.sport-opt { border: 1px solid var(--border); border-radius: 8px; padding: 10px 4px; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--surface); min-height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+.sport-opt.active { border-color: var(--orange); background: rgba(252,76,2,0.08); }
+.so-emoji { font-size: 1.4rem; }
+.so-label { font-size: 0.65rem; color: var(--text2); font-weight: 600; text-transform: uppercase; }
+.sport-opt.active .so-label { color: var(--orange); }
+
+/* ── TRANSLATION BOX ── */
 .translation-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
-.trans-header { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; border-bottom: 1px solid var(--border); background: var(--card2); }
-.trans-header span { font-size: 0.78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-.trans-body { padding: 10px 14px; }
-.trans-body textarea { background: transparent; border: none; width: 100%; color: var(--text); font-family: 'Barlow', sans-serif; font-size: 0.9rem; outline: none; resize: vertical; min-height: 75px; line-height: 1.6; }
-.trans-divider { display: flex; align-items: center; gap: 10px; padding: 5px 14px; font-size: 0.75rem; color: var(--muted); }
+.trans-header { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-bottom: 1px solid var(--border); background: var(--card2); }
+.trans-header span { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.trans-body { padding: 10px 12px; }
+.trans-body textarea { background: transparent; border: none; width: 100%; color: var(--text); font-family: 'Barlow', sans-serif; font-size: 0.95rem; outline: none; resize: vertical; min-height: 75px; line-height: 1.6; }
+.trans-divider { display: flex; align-items: center; gap: 8px; padding: 4px 12px; font-size: 0.72rem; color: var(--muted); }
 .trans-divider::before, .trans-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-.photo-zone { border: 2px dashed var(--border2); border-radius: 8px; padding: 18px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; margin-bottom: 12px; }
-.photo-zone:hover, .photo-zone.dragover { border-color: var(--orange); background: rgba(252,76,2,0.04); }
-.photo-zone p { font-size: 0.85rem; color: var(--text2); }
+/* ── PHOTOS ── */
+.photo-zone { border: 2px dashed var(--border2); border-radius: 8px; padding: 18px; text-align: center; cursor: pointer; transition: border-color 0.2s; margin-bottom: 12px; min-height: 70px; display: flex; align-items: center; justify-content: center; }
+.photo-zone.dragover { border-color: var(--orange); background: rgba(252,76,2,0.04); }
+.photo-zone p { font-size: 0.88rem; color: var(--text2); }
 .photo-zone p span { color: var(--orange); font-weight: 600; }
 input[type=file] { display: none; }
-.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 7px; margin-bottom: 10px; }
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px,1fr)); gap: 6px; margin-bottom: 10px; }
 .photo-thumb { position: relative; border-radius: 6px; overflow: hidden; aspect-ratio: 1; background: var(--surface); }
 .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.photo-thumb .del-photo { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.photo-thumb .del-photo { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.75); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-.counter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; }
-@media(max-width:500px){ .counter-grid { grid-template-columns: repeat(2,1fr); } }
-.counter-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
-.counter-tile .ct-emoji { font-size: 1.4rem; margin-bottom: 4px; }
-.counter-tile .ct-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
-.counter-tile .ct-num { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--orange); }
-.counter-tile .ct-num.dim { color: var(--muted); font-size: 0.9rem; font-family: 'Barlow', sans-serif; }
+/* ── AI BOX ── */
+.ai-box { background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.ai-box-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ai-box-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #60b0f0; }
+.ai-suggestion { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s; }
+.ai-suggestion:last-child { margin-bottom: 0; }
+.ai-suggestion.selected { border-color: var(--orange); background: rgba(252,76,2,0.05); }
+.as-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; margin-bottom: 3px; }
+.as-val { font-size: 0.92rem; color: var(--text); }
 
-.sec-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+/* ── SEC LABEL ── */
+.sec-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-.upload-progress { background: var(--surface); border-radius: 6px; overflow: hidden; height: 4px; margin-top: 10px; display: none; }
+/* ── PROGRESS ── */
+.upload-progress { background: var(--surface); border-radius: 6px; overflow: hidden; height: 4px; margin-top: 8px; display: none; }
 .upload-progress.show { display: block; }
 .progress-bar { height: 100%; background: var(--orange); transition: width 0.3s; width: 0%; }
 
-.skeleton { background: linear-gradient(90deg, var(--card) 25%, var(--card2) 50%, var(--card) 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 6px; height: 68px; margin-bottom: 8px; }
+/* ── SKELETON ── */
+.skeleton { background: linear-gradient(90deg, var(--card) 25%, var(--card2) 50%, var(--card) 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 8px; height: 72px; margin-bottom: 8px; }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
 .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
 .empty-state .ei { font-size: 2.5rem; margin-bottom: 10px; }
 .empty-state p { font-size: 0.9rem; line-height: 1.6; }
 
-.sport-select { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; margin-bottom: 14px; }
-@media(max-width:500px){ .sport-select { grid-template-columns: repeat(2,1fr); } }
-.sport-opt { border: 1px solid var(--border); border-radius: 8px; padding: 9px 6px; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--surface); }
-.sport-opt:hover { border-color: var(--border2); }
-.sport-opt.active { border-color: var(--orange); background: rgba(252,76,2,0.08); }
-.sport-opt .so-emoji { font-size: 1.3rem; }
-.sport-opt .so-label { font-size: 0.68rem; color: var(--text2); margin-top: 3px; font-weight: 600; text-transform: uppercase; }
-.sport-opt.active .so-label { color: var(--orange); }
-
-.stats-period { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
-.period-btn { padding: 8px 20px; font-size: 0.85rem; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; margin-bottom: -1px; background: none; border-top: none; border-left: none; border-right: none; font-family: 'Barlow', sans-serif; }
-.period-btn:hover { color: var(--text2); }
+/* ── STATS ── */
+.stats-period { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+.period-btn { padding: 8px 18px; font-size: 0.85rem; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; margin-bottom: -1px; background: none; border-top: none; border-left: none; border-right: none; font-family: 'Barlow', sans-serif; min-height: 44px; }
 .period-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
 
-.stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 14px; }
-@media(max-width:500px){ .stats-grid { grid-template-columns: 1fr; } }
-.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
-.stat-card .sc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-.stat-card .sc-emoji { font-size: 1.3rem; }
-.stat-card .sc-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); }
-.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); }
+.month-selector { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.month-selector button { background: var(--card2); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 1.1rem; min-height: 44px; min-width: 44px; }
+.month-label { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text); flex: 1; text-align: center; }
+
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+.sc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.sc-emoji { font-size: 1.3rem; }
+.sc-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); flex: 1; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
 .stat-row:last-child { border-bottom: none; }
-.stat-row .sr-label { font-size: 0.82rem; color: var(--muted); }
-.stat-row .sr-val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text); }
-.stat-row .sr-val span { font-size: 0.75rem; color: var(--muted); font-family: 'Barlow', sans-serif; font-weight: 400; margin-left: 2px; }
+.sr-label { font-size: 0.82rem; color: var(--muted); }
+.sr-val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text); display: flex; align-items: baseline; gap: 4px; }
+.sr-unit { font-size: 0.72rem; color: var(--muted); font-family: 'Barlow', sans-serif; font-weight: 400; }
+.sr-compare { font-size: 0.75rem; color: var(--muted); font-family: 'Barlow', sans-serif; }
+.sr-compare.up { color: var(--success); }
+.sr-compare.down { color: #f87171; }
 
-.month-selector { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-.month-selector button { background: var(--card2); border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 5px 14px; cursor: pointer; font-size: 1rem; font-family: 'Barlow', sans-serif; }
-.month-selector button:hover { border-color: var(--border2); color: var(--text); }
-.month-selector .month-label { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text); min-width: 150px; text-align: center; }
+/* Bar chart */
+.bar-chart { margin-top: 8px; }
+.bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.bar-year { font-size: 0.7rem; color: var(--muted); width: 32px; text-align: right; flex-shrink: 0; }
+.bar-track { flex: 1; background: var(--border); border-radius: 4px; height: 20px; overflow: hidden; position: relative; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; display: flex; align-items: center; padding: 0 6px; }
+.bar-fill.this-year { background: var(--orange); }
+.bar-fill.last-year { background: #444; }
+.bar-val { font-size: 0.7rem; font-weight: 700; color: white; white-space: nowrap; }
 
-.ai-box { background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 14px; margin-bottom: 12px; }
-.ai-box-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.ai-box-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #60b0f0; }
-.ai-suggestion { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s; }
-.ai-suggestion:last-child { margin-bottom: 0; }
-.ai-suggestion:hover { border-color: var(--orange); }
-.ai-suggestion.selected { border-color: var(--orange); background: rgba(252,76,2,0.05); }
-.ai-suggestion .as-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
-.ai-suggestion .as-val { font-size: 0.9rem; color: var(--text); }
+/* YTD section */
+.ytd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.ytd-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
+.ytd-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.ytd-val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--text); }
+.ytd-val .ytd-unit { font-size: 0.75rem; color: var(--muted); font-family: 'Barlow', sans-serif; font-weight: 400; margin-left: 2px; }
+.ytd-diff { font-size: 0.75rem; margin-top: 2px; }
+.ytd-diff.up { color: var(--success); }
+.ytd-diff.down { color: #f87171; }
+.ytd-diff.neutral { color: var(--muted); }
+
+/* Setup */
+.setup-steps { list-style: none; margin-bottom: 16px; }
+.setup-steps li { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; font-size: 0.88rem; color: #999; line-height: 1.6; }
+.setup-steps .sn { background: var(--orange); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.setup-steps a { color: var(--orange); text-decoration: none; }
+.security-note { background: rgba(252,76,2,0.07); border-left: 3px solid var(--orange); padding: 10px 12px; border-radius: 0 6px 6px 0; font-size: 0.82rem; color: #bbb; line-height: 1.6; margin-bottom: 14px; }
+.conn-badge { display: none; align-items: center; gap: 8px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25); border-radius: 8px; padding: 8px 14px; font-size: 0.84rem; color: #86efac; margin-top: 10px; }
+.conn-badge.show { display: flex; }
+.conn-badge .cdot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+
+.page-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px; }
+.page-sub { font-size: 0.8rem; color: var(--text2); margin-bottom: 16px; }
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="logo">Strava <span>Manager</span></div>
-  <div class="nav">
-    <button class="nav-btn active" onclick="showPage('activities',this)">Aktivity</button>
-    <button class="nav-btn" onclick="showPage('stats',this)">📊 Štatistiky</button>
-    <button class="nav-btn" onclick="showPage('manual',this)">+ Nová</button>
-    <button class="nav-btn" onclick="showPage('settings',this)">⚙</button>
+  <div class="header-right">
+    <span class="version">v5.0</span>
+    <div class="conn-dot" id="hdr-dot"></div>
   </div>
-  <div style="font-size:0.7rem;color:var(--muted);white-space:nowrap">v4.3</div>
-  <div class="conn-dot" id="hdr-dot"></div>
 </div>
 
-<!-- ══ AKTIVITY ══ -->
+<!-- ══ ACTIVITIES ══ -->
 <div class="page active" id="page-activities">
 <div class="container">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
     <div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:1px">Garmin → Strava</div>
-      <div style="font-size:0.8rem;color:var(--text2);margin-top:2px">Klikni na aktivitu a uprav ju</div>
+      <div class="page-title">Activities</div>
+      <div class="page-sub">Tap an activity to edit it</div>
     </div>
-    <button class="btn btn-secondary btn-sm" onclick="loadAll()">⟳ Načítať</button>
+    <button class="btn btn-secondary btn-sm" onclick="loadAll()">⟳ Refresh</button>
   </div>
 
   <div class="counter-grid">
-    <div class="counter-tile"><div class="ct-emoji">🚴‍♂️</div><div class="ct-label">Cyklistika</div><div class="ct-num dim" id="c-Ride">—</div></div>
-    <div class="counter-tile"><div class="ct-emoji">🏃</div><div class="ct-label">Beh</div><div class="ct-num dim" id="c-Run">—</div></div>
+    <div class="counter-tile"><div class="ct-emoji">🚴‍♂️</div><div class="ct-label">Cycling</div><div class="ct-num dim" id="c-Ride">—</div></div>
+    <div class="counter-tile"><div class="ct-emoji">🏃</div><div class="ct-label">Running</div><div class="ct-num dim" id="c-Run">—</div></div>
     <div class="counter-tile"><div class="ct-emoji">🏋️</div><div class="ct-label">CrossFit</div><div class="ct-num dim" id="c-WeightTraining">—</div></div>
-    <div class="counter-tile"><div class="ct-emoji">🥾</div><div class="ct-label">Turistika</div><div class="ct-num dim" id="c-Hike">—</div></div>
+    <div class="counter-tile"><div class="ct-emoji">🥾</div><div class="ct-label">Hiking</div><div class="ct-num dim" id="c-Hike">—</div></div>
   </div>
 
-  <div class="sec-label">Posledné aktivity (30 dní)</div>
+  <div class="sec-label">Last 30 days</div>
   <div id="act-list-container">
-    <div class="empty-state"><div class="ei">🔗</div><p>Pripoč sa na Strava v záložke <strong>⚙ Nastavenia</strong>.</p></div>
+    <div class="empty-state"><div class="ei">🔗</div><p>Connect to Strava in <strong>Settings</strong> first.</p></div>
   </div>
 
+  <!-- EDIT PANEL -->
   <div class="edit-panel" id="edit-panel">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;margin-bottom:14px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="ep-orig-name"></div>
+    <div style="font-size:0.88rem;color:var(--text2);margin-bottom:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="ep-orig-name"></div>
 
-    <div class="sec-label">Typ aktivity</div>
+    <div class="sec-label">Activity type</div>
     <div class="sport-select" id="ep-sport-select">
-      <div class="sport-opt active" onclick="epSelectSport(this,'Ride','🚴‍♂️')"><div class="so-emoji">🚴‍♂️</div><div class="so-label">Cyklistika</div></div>
-      <div class="sport-opt" onclick="epSelectSport(this,'Run','🏃')"><div class="so-emoji">🏃</div><div class="so-label">Beh</div></div>
+      <div class="sport-opt active" onclick="epSelectSport(this,'Ride','🚴‍♂️')"><div class="so-emoji">🚴‍♂️</div><div class="so-label">Cycling</div></div>
+      <div class="sport-opt" onclick="epSelectSport(this,'Run','🏃')"><div class="so-emoji">🏃</div><div class="so-label">Run</div></div>
       <div class="sport-opt" onclick="epSelectSport(this,'WeightTraining','🏋️')"><div class="so-emoji">🏋️</div><div class="so-label">CrossFit</div></div>
-      <div class="sport-opt" onclick="epSelectSport(this,'Hike','🥾')"><div class="so-emoji">🥾</div><div class="so-label">Turistika</div></div>
+      <div class="sport-opt" onclick="epSelectSport(this,'Hike','🥾')"><div class="so-emoji">🥾</div><div class="so-label">Hike</div></div>
     </div>
 
-    <div class="sec-label">Číslo aktivity</div>
+    <div class="sec-label">Activity number</div>
     <div class="num-row">
-      <div class="num-label">Poradové číslo (zmeň ak treba)</div>
+      <div class="num-label">Change if needed</div>
       <div class="num-controls">
         <span class="num-emoji" id="ep-emoji-prefix">🚴‍♂️</span>
         <span class="num-hash">#</span>
@@ -255,163 +336,206 @@ input[type=file] { display: none; }
       </div>
     </div>
 
-    <div class="sec-label">Názov za číslom</div>
+    <div class="sec-label">Title (after number)</div>
     <div class="field" style="margin-bottom:6px">
-      <input type="text" id="ep-subtitle" placeholder="napr. Lunch break ride, Makama…" oninput="updateEpPreview()">
+      <input type="text" id="ep-subtitle" placeholder="e.g. Lunch break ride, Makama…" oninput="updateEpPreview()">
     </div>
-    <div class="name-preview" style="margin-bottom:14px">
-      <div class="np-label">Výsledný názov na Strava</div>
+    <div class="name-preview" style="margin-bottom:12px">
+      <div class="np-label">Final name on Strava</div>
       <div class="np-val" id="ep-new-name">🚴‍♂️ #1/26</div>
     </div>
 
-    <div id="ai-section" style="display:none">
-      <div class="sec-label">AI návrhy názvu (Gemini)</div>
-      <div class="ai-box">
-        <div class="ai-box-header">
-          <span class="ai-box-title">✨ Návrhy v tvojom štýle</span>
-          <button class="btn btn-secondary btn-sm" id="ai-gen-btn" onclick="generateAISuggestions()">Generovať</button>
-        </div>
-        <div id="ai-suggestions-container" style="font-size:0.82rem;color:var(--muted)">Klikni Generovať.</div>
-      </div>
-    </div>
-
-    <div class="sec-label">Popis aktivity</div>
+    <div class="sec-label">Description</div>
     <div class="translation-box">
       <div class="trans-header">
-        <span>🇸🇰 Slovensky</span>
-        <button class="btn btn-secondary btn-sm" onclick="translateDesc()" id="trans-btn">🌐 Preložiť do EN</button>
+        <span>🇸🇰 Slovak</span>
+        <button class="btn btn-secondary btn-sm" onclick="translateDesc()" id="trans-btn">🌐 Translate to EN</button>
       </div>
-      <div class="trans-body"><textarea id="ep-desc-sk" placeholder="Napíš popis po slovensky…" oninput="clearTransStatus()"></textarea></div>
+      <div class="trans-body"><textarea id="ep-desc-sk" placeholder="Write description in Slovak…" oninput="clearTransStatus()"></textarea></div>
       <div class="trans-divider">→ Google Translate</div>
       <div class="trans-header" style="border-top:1px solid var(--border);border-bottom:none">
         <span>🇬🇧 English</span>
-        <span id="trans-status" style="font-size:0.75rem;color:var(--muted)"></span>
+        <span id="trans-status" style="font-size:0.72rem;color:var(--muted)"></span>
       </div>
-      <div class="trans-body"><textarea id="ep-desc-en" placeholder="Preklad…" style="color:var(--text2)"></textarea></div>
+      <div class="trans-body"><textarea id="ep-desc-en" placeholder="Translation appears here…" style="color:var(--text2)"></textarea></div>
     </div>
 
-    <div class="sec-label">Fotky</div>
+    <div id="ai-section" style="display:none">
+      <div class="sec-label">AI title suggestions (Gemini)</div>
+      <div class="ai-box">
+        <div class="ai-box-header">
+          <span class="ai-box-title">✨ Suggestions in your style</span>
+          <button class="btn btn-secondary btn-sm" id="ai-gen-btn" onclick="generateAISuggestions()">Generate</button>
+        </div>
+        <div id="ai-suggestions-container" style="font-size:0.82rem;color:var(--muted)">
+          Tap Generate. If you wrote a description above, AI will use it.
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-label">Photos</div>
     <div id="photo-grid" class="photo-grid"></div>
     <div class="photo-zone" id="photo-zone" onclick="document.getElementById('photo-input').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handlePhotoDrop(event)">
-      <p>📸 <span>Klikni alebo pretiahni fotky</span> — max 10</p>
+      <p>📸 <span>Tap or drag photos</span> — max 10</p>
     </div>
     <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotoSelect(event)">
     <div class="upload-progress" id="upload-progress"><div class="progress-bar" id="progress-bar"></div></div>
 
     <div class="btn-row" style="margin-top:14px">
-      <button class="btn btn-success" id="ep-save-btn" onclick="saveActivity()">💾 Uložiť na Strava</button>
-      <button class="btn btn-ghost" onclick="closeEditPanel()">Zrušiť</button>
+      <button class="btn btn-success" style="flex:1" id="ep-save-btn" onclick="saveActivity()">💾 Save to Strava</button>
+      <button class="btn btn-ghost" onclick="closeEditPanel()">Cancel</button>
     </div>
     <div class="status" id="ep-status"></div>
   </div>
 </div>
 </div>
 
-<!-- ══ ŠTATISTIKY ══ -->
+<!-- ══ STATS ══ -->
 <div class="page" id="page-stats">
 <div class="container">
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:1px;margin-bottom:20px">Štatistiky</div>
+  <div class="page-title">Statistics</div>
+  <div class="page-sub" id="stats-sub">This year</div>
+
   <div class="stats-period">
-    <button class="period-btn active" onclick="switchPeriod('month',this)">Mesačné</button>
-    <button class="period-btn" onclick="switchPeriod('year',this)">Ročné</button>
+    <button class="period-btn active" onclick="switchPeriod('month',this)">Monthly</button>
+    <button class="period-btn" onclick="switchPeriod('year',this)">Year</button>
+    <button class="period-btn" onclick="switchPeriod('ytd',this)">YTD</button>
   </div>
+
   <div class="month-selector" id="month-selector">
     <button onclick="changeMonth(-1)">‹</button>
-    <div class="month-label" id="month-label">Marec 2026</div>
+    <div class="month-label" id="month-label">March 2026</div>
     <button onclick="changeMonth(1)">›</button>
   </div>
-  <div id="stats-content"><div class="empty-state"><div class="ei">📊</div><p>Načítaj aktivity najprv.</p></div></div>
+
+  <div id="stats-content"><div class="empty-state"><div class="ei">📊</div><p>Load activities first.</p></div></div>
 </div>
 </div>
 
-<!-- ══ MANUÁLNE ══ -->
+<!-- ══ NEW ACTIVITY ══ -->
 <div class="page" id="page-manual">
 <div class="container">
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:1px;margin-bottom:6px">Manuálna aktivita</div>
-  <div style="font-size:0.8rem;color:var(--text2);margin-bottom:20px">Aktivita ktorá nie je z Garminu</div>
+  <div class="page-title">New Activity</div>
+  <div class="page-sub">Manual entry — not from Garmin</div>
+
   <div class="card">
-    <div class="sec-label">Typ aktivity</div>
+    <div class="sec-label">Activity type</div>
     <div class="sport-select" id="man-sport-select">
-      <div class="sport-opt active" onclick="manSelectSport(this,'Ride','🚴‍♂️')"><div class="so-emoji">🚴‍♂️</div><div class="so-label">Cyklistika</div></div>
-      <div class="sport-opt" onclick="manSelectSport(this,'Run','🏃')"><div class="so-emoji">🏃</div><div class="so-label">Beh</div></div>
+      <div class="sport-opt active" onclick="manSelectSport(this,'Ride','🚴‍♂️')"><div class="so-emoji">🚴‍♂️</div><div class="so-label">Cycling</div></div>
+      <div class="sport-opt" onclick="manSelectSport(this,'Run','🏃')"><div class="so-emoji">🏃</div><div class="so-label">Run</div></div>
       <div class="sport-opt" onclick="manSelectSport(this,'WeightTraining','🏋️')"><div class="so-emoji">🏋️</div><div class="so-label">CrossFit</div></div>
-      <div class="sport-opt" onclick="manSelectSport(this,'Hike','🥾')"><div class="so-emoji">🥾</div><div class="so-label">Turistika</div></div>
+      <div class="sport-opt" onclick="manSelectSport(this,'Hike','🥾')"><div class="so-emoji">🥾</div><div class="so-label">Hike</div></div>
     </div>
-    <div class="field" style="margin-bottom:8px"><label>Názov za číslom</label><input type="text" id="man-subtitle" placeholder="napr. Morning run…" oninput="updateManPreview()"></div>
-    <div class="name-preview" style="margin-bottom:18px"><div class="np-label">Výsledný názov</div><div class="np-val" id="man-name-preview">🚴‍♂️ #1/26</div></div>
-    <div class="grid3" style="margin-bottom:12px">
-      <div class="field"><label>Dátum</label><input type="date" id="man-date"></div>
-      <div class="field"><label>Čas</label><input type="time" id="man-time" value="09:00"></div>
-      <div class="field"><label>Trvanie (min)</label><input type="number" id="man-dur" placeholder="60" min="1"></div>
+    <div class="field" style="margin-bottom:8px"><label>Title (after number)</label><input type="text" id="man-subtitle" placeholder="e.g. Morning run…" oninput="updateManPreview()"></div>
+    <div class="name-preview" style="margin-bottom:16px"><div class="np-label">Final name</div><div class="np-val" id="man-name-preview">🚴‍♂️ #1/26</div></div>
+    <div class="grid3" style="margin-bottom:10px">
+      <div class="field"><label>Date</label><input type="date" id="man-date"></div>
+      <div class="field"><label>Time</label><input type="time" id="man-time" value="09:00"></div>
+      <div class="field"><label>Duration (min)</label><input type="number" id="man-dur" placeholder="60" min="1"></div>
     </div>
-    <div class="grid2" style="margin-bottom:12px"><div class="field"><label>Vzdialenosť km (vol.)</label><input type="number" id="man-dist" placeholder="0" step="0.1" min="0"></div></div>
-    <div class="sec-label">Popis</div>
+    <div class="grid2" style="margin-bottom:10px">
+      <div class="field"><label>Distance km (opt.)</label><input type="number" id="man-dist" placeholder="0" step="0.1" min="0"></div>
+    </div>
+    <div class="sec-label">Description</div>
     <div class="translation-box" style="margin-bottom:14px">
-      <div class="trans-header"><span>🇸🇰 Slovensky</span><button class="btn btn-secondary btn-sm" onclick="translateDescMan()">🌐 Preložiť</button></div>
-      <div class="trans-body"><textarea id="man-desc-sk" placeholder="Popis po slovensky…"></textarea></div>
+      <div class="trans-header"><span>🇸🇰 Slovak</span><button class="btn btn-secondary btn-sm" onclick="translateDescMan()">🌐 Translate</button></div>
+      <div class="trans-body"><textarea id="man-desc-sk" placeholder="Description in Slovak…"></textarea></div>
       <div class="trans-divider">→ Google Translate</div>
-      <div class="trans-header" style="border-top:1px solid var(--border);border-bottom:none"><span>🇬🇧 English</span><span id="man-trans-status" style="font-size:0.75rem;color:var(--muted)"></span></div>
-      <div class="trans-body"><textarea id="man-desc-en" placeholder="Preklad…" style="color:var(--text2)"></textarea></div>
+      <div class="trans-header" style="border-top:1px solid var(--border);border-bottom:none"><span>🇬🇧 English</span><span id="man-trans-status" style="font-size:0.72rem;color:var(--muted)"></span></div>
+      <div class="trans-body"><textarea id="man-desc-en" placeholder="Translation…" style="color:var(--text2)"></textarea></div>
     </div>
-    <div class="btn-row"><button class="btn btn-primary" id="man-upload-btn" onclick="uploadManual()">⬆️ Nahrať na Strava</button></div>
+    <button class="btn btn-primary btn-full" id="man-upload-btn" onclick="uploadManual()">⬆️ Upload to Strava</button>
     <div class="status" id="man-status"></div>
   </div>
 </div>
 </div>
 
-<!-- ══ NASTAVENIA ══ -->
+<!-- ══ SETTINGS ══ -->
 <div class="page" id="page-settings">
 <div class="container">
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:1px;margin-bottom:20px">Nastavenia</div>
+  <div class="page-title">Settings</div>
+
   <div class="card">
     <div class="card-title"><span class="accent">01</span> Strava API</div>
     <ul class="setup-steps">
-      <li><span class="sn">1</span><span>Choď na <a href="https://www.strava.com/settings/api" target="_blank">strava.com/settings/api</a></span></li>
-      <li><span class="sn">2</span><span>Skopíruj <strong>Client ID</strong> a <strong>Client Secret</strong></span></li>
-      <li><span class="sn">3</span><span>Klikni Pripojiť</span></li>
+      <li><span class="sn">1</span><span>Go to <a href="https://www.strava.com/settings/api" target="_blank">strava.com/settings/api</a></span></li>
+      <li><span class="sn">2</span><span>Copy <strong>Client ID</strong> and <strong>Client Secret</strong></span></li>
+      <li><span class="sn">3</span><span>Tap Connect — one-time approval on Strava</span></li>
     </ul>
-    <div class="security-note">🔒 Tokeny uložené len lokálne v prehliadači. Nikam sa neposielajú.</div>
-    <div class="grid2" style="margin-bottom:12px">
-      <div class="field"><label>Client ID</label><input type="text" id="s-cid" placeholder="123456"></div>
+    <div class="security-note">🔒 Tokens stored locally in your browser only. Never sent anywhere.</div>
+    <div class="grid2" style="margin-bottom:10px">
+      <div class="field"><label>Client ID</label><input type="text" id="s-cid" placeholder="123456" inputmode="numeric"></div>
       <div class="field"><label>Client Secret</label><input type="password" id="s-cs" placeholder="abc123..."></div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-primary" onclick="startStravaAuth()">🔗 Pripojiť Strava</button>
-      <button class="btn btn-ghost" onclick="stravaDisconnect()">Odpojiť</button>
+      <button class="btn btn-primary" onclick="startStravaAuth()">🔗 Connect Strava</button>
+      <button class="btn btn-ghost" onclick="stravaDisconnect()">Disconnect</button>
     </div>
-    <div class="conn-badge" id="strava-badge"><div class="cdot"></div><span id="strava-badge-name">Pripojený</span><span style="margin-left:auto;font-size:0.78rem;color:var(--muted)" id="strava-badge-exp"></span></div>
+    <div class="conn-badge" id="strava-badge"><div class="cdot"></div><span id="strava-badge-name">Connected</span><span style="margin-left:auto;font-size:0.75rem;color:var(--muted)" id="strava-badge-exp"></span></div>
     <div class="status" id="s-strava-status"></div>
   </div>
+
   <div class="card">
-    <div class="card-title"><span class="accent">02</span> Gemini API — AI návrhy názvov</div>
-    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:14px;line-height:1.6">Pre AI generovanie názvov cyklistických aktivít v tvojom štýle. Získaj kľúč zadarmo na <a href="https://aistudio.google.com" target="_blank" style="color:var(--orange)">aistudio.google.com</a>.</p>
-    <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:12px">
+    <div class="card-title"><span class="accent">02</span> Gemini API — AI title suggestions</div>
+    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:12px;line-height:1.6">Get a free key at <a href="https://aistudio.google.com" target="_blank" style="color:var(--orange)">aistudio.google.com</a>. Used only for cycling title suggestions.</p>
+    <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px">
       <div class="field" style="flex:1"><label>Gemini API Key</label><input type="password" id="s-gemini" placeholder="AIza..."></div>
-      <button class="btn btn-secondary" onclick="saveGeminiKey()">Uložiť</button>
+      <button class="btn btn-secondary" onclick="saveGeminiKey()">Save</button>
     </div>
     <div class="status" id="s-gemini-status"></div>
   </div>
+
+  <div class="card">
+    <div class="card-title"><span class="accent">03</span> How it works</div>
+    <div style="font-size:0.85rem;color:var(--text2);line-height:1.9">
+      <p>1. Garmin uploads activity → appears in the list.</p>
+      <p>2. Tap activity → select type, adjust number if needed.</p>
+      <p>3. For cycling: AI suggests titles in your style.</p>
+      <p>4. Write description in Slovak → Google translates to English.</p>
+      <p>5. Add photos → Save. ✓</p>
+      <p style="margin-top:8px;color:var(--muted)">Tip: If you write a description first, the AI will use it to suggest a matching title.</p>
+    </div>
+  </div>
 </div>
+</div>
+
+<!-- ══ BOTTOM NAV ══ -->
+<div class="bottom-nav">
+  <button class="nav-item active" onclick="showPage('activities',this)" id="nav-activities">
+    <span class="ni-icon">🏃</span>
+    <span class="ni-label">Activities</span>
+  </button>
+  <button class="nav-item" onclick="showPage('stats',this)" id="nav-stats">
+    <span class="ni-icon">📊</span>
+    <span class="ni-label">Stats</span>
+  </button>
+  <button class="nav-item" onclick="showPage('manual',this)" id="nav-manual">
+    <span class="ni-icon">➕</span>
+    <span class="ni-label">New</span>
+  </button>
+  <button class="nav-item" onclick="showPage('settings',this)" id="nav-settings">
+    <span class="ni-icon">⚙️</span>
+    <span class="ni-label">Settings</span>
+  </button>
 </div>
 
 <script>
 const REDIRECT_URI = location.href.split('?')[0].split('#')[0];
 const YEAR_SUFFIX = String(new Date().getFullYear()).slice(-2);
-const MONTHS_SK = ['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
+const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 const SPORT_MAP = {
   Ride:'Ride', VirtualRide:'Ride', EBikeRide:'Ride',
-  MountainBikeRide:'Ride', EMountainBikeRide:'Ride',
-  GravelRide:'Ride', Velomobile:'Ride', Handcycle:'Ride',
+  MountainBikeRide:'Ride', EMountainBikeRide:'Ride', GravelRide:'Ride',
   Run:'Run', VirtualRun:'Run', TrailRun:'Run',
   WeightTraining:'WeightTraining', Workout:'WeightTraining', CrossFit:'WeightTraining',
   Hike:'Hike', Walk:'Hike',
 };
 const SPORT_CONFIG = {
-  Ride:           { emoji:'🚴‍♂️', label:'Cyklistika' },
-  Run:            { emoji:'🏃',   label:'Beh' },
+  Ride:           { emoji:'🚴‍♂️', label:'Cycling' },
+  Run:            { emoji:'🏃',   label:'Running' },
   WeightTraining: { emoji:'🏋️',  label:'CrossFit' },
-  Hike:           { emoji:'🥾',   label:'Turistika' },
+  Hike:           { emoji:'🥾',   label:'Hiking' },
 };
 
 function ls(k){ return localStorage.getItem(k); }
@@ -429,7 +553,7 @@ let S = {
   editActivity:null, editSport:'Ride', editEmoji:'🚴‍♂️',
   photos:[], manSport:'Ride', manEmoji:'🚴‍♂️',
   statsPeriod:'month', statsMonth:new Date().getMonth(), statsYear:new Date().getFullYear(),
-  allYearActs:[],
+  allYearActs:[], lastYearActs:[],
 };
 
 window.onload = async () => {
@@ -445,35 +569,33 @@ window.onload = async () => {
 
 function showPage(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   btn.classList.add('active');
   if(name==='stats') renderStats();
 }
 
+// ── AUTH ──────────────────────────────────────────────────────────────────
 function startStravaAuth(){
   const cid=document.getElementById('s-cid').value.trim();
   const cs=document.getElementById('s-cs').value.trim();
-  if(!cid||!cs){showStatus('s-strava-status','Zadaj Client ID aj Secret.','error');return;}
+  if(!cid||!cs){showStatus('s-strava-status','Enter Client ID and Secret.','error');return;}
   lss('strava_cid',cid); lss('strava_cs',cs); S.clientId=cid; S.clientSecret=cs;
   location.href=`https://www.strava.com/oauth/authorize?client_id=${cid}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&approval_prompt=force&scope=activity:read_all,activity:write`;
 }
 
 async function handleOAuthCallback(code){
-  showStatus('s-strava-status','Autorizujem…','info');
+  showStatus('s-strava-status','Authorizing…','info');
   const r=await fetch('https://www.strava.com/oauth/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:S.clientId,client_secret:S.clientSecret,code,grant_type:'authorization_code'})});
   const d=await r.json();
   if(d.access_token){
     S.accessToken=d.access_token; S.refreshToken=d.refresh_token; S.tokenExpiry=d.expires_at;
     S.athleteName=(d.athlete?.firstname||'')+' '+(d.athlete?.lastname||'');
     lss('strava_at',d.access_token); lss('strava_rt',d.refresh_token); lss('strava_exp',d.expires_at); lss('strava_athlete',S.athleteName);
-    updateConnectedUI(); showStatus('s-strava-status','Úspešne pripojené! 🎉','success');
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-    document.getElementById('page-activities').classList.add('active');
-    document.querySelector('.nav-btn').classList.add('active');
+    updateConnectedUI(); showStatus('s-strava-status','Connected! 🎉','success');
+    showPage('activities', document.getElementById('nav-activities'));
     await loadAll();
-  } else { showStatus('s-strava-status','Chyba: '+(d.message||'Neznáma'),'error'); }
+  } else { showStatus('s-strava-status','Error: '+(d.message||'Unknown'),'error'); }
 }
 
 function updateConnectedUI(){
@@ -481,16 +603,16 @@ function updateConnectedUI(){
   const badge=document.getElementById('strava-badge');
   if(S.accessToken){
     badge.classList.add('show');
-    document.getElementById('strava-badge-name').textContent=S.athleteName||'Pripojený';
-    document.getElementById('strava-badge-exp').textContent='Token do '+new Date(S.tokenExpiry*1000).toLocaleDateString('sk-SK');
+    document.getElementById('strava-badge-name').textContent=S.athleteName||'Connected';
+    document.getElementById('strava-badge-exp').textContent='Token until '+new Date(S.tokenExpiry*1000).toLocaleDateString('en-GB');
   } else { badge.classList.remove('show'); }
 }
 
 function stravaDisconnect(){
   ['strava_at','strava_rt','strava_exp','strava_athlete','strava_counters'].forEach(k=>localStorage.removeItem(k));
-  Object.assign(S,{accessToken:'',refreshToken:'',tokenExpiry:0,athleteName:'',counters:{},allYearActs:[]});
+  Object.assign(S,{accessToken:'',refreshToken:'',tokenExpiry:0,athleteName:'',counters:{},allYearActs:[],lastYearActs:[]});
   updateConnectedUI();
-  document.getElementById('act-list-container').innerHTML='<div class="empty-state"><div class="ei">🔗</div><p>Pripoč sa na Strava.</p></div>';
+  document.getElementById('act-list-container').innerHTML='<div class="empty-state"><div class="ei">🔗</div><p>Connect to Strava in Settings.</p></div>';
   Object.keys(SPORT_CONFIG).forEach(t=>{const el=document.getElementById('c-'+t);if(el){el.textContent='—';el.className='ct-num dim';}});
 }
 
@@ -505,24 +627,44 @@ async function ensureToken(){
 
 function saveGeminiKey(){
   const k=document.getElementById('s-gemini').value.trim();
-  if(!k){showStatus('s-gemini-status','Zadaj API kľúč.','error');return;}
-  lss('gemini_key',k); S.geminiKey=k; showStatus('s-gemini-status','Kľúč uložený ✓','success');
+  if(!k){showStatus('s-gemini-status','Enter API key.','error');return;}
+  lss('gemini_key',k); S.geminiKey=k; showStatus('s-gemini-status','Key saved ✓','success');
 }
 
-async function loadAll(){ await loadYearActivities(); computeCounters(); loadRecentActivities(); }
+// ── LOAD ALL ──────────────────────────────────────────────────────────────
+async function loadAll(){
+  await Promise.all([loadYearActivities(), loadLastYearActivities()]);
+  computeCounters();
+  loadRecentActivities();
+}
 
-async function loadYearActivities(){
-  if(!S.accessToken||!await ensureToken()) return;
-  const yearStart=Math.floor(new Date(`${new Date().getFullYear()}-01-01`).getTime()/1000);
+async function fetchActivitiesInRange(after, before){
+  if(!S.accessToken||!await ensureToken()) return [];
   let all=[],page=1,done=false;
   while(!done){
-    const r=await fetch(`https://www.strava.com/api/v3/athlete/activities?after=${yearStart}&per_page=100&page=${page}`,{headers:{Authorization:'Bearer '+S.accessToken}});
+    const url=`https://www.strava.com/api/v3/athlete/activities?after=${after}&before=${before}&per_page=100&page=${page}`;
+    const r=await fetch(url,{headers:{Authorization:'Bearer '+S.accessToken}});
     const acts=await r.json();
     if(!Array.isArray(acts)||!acts.length){done=true;break;}
     all=all.concat(acts); page++; if(acts.length<100) done=true;
   }
-  all.sort((a,b)=>new Date(b.start_date_local)-new Date(a.start_date_local));
-  S.allYearActs=all;
+  return all;
+}
+
+async function loadYearActivities(){
+  const yearStart=Math.floor(new Date(`${new Date().getFullYear()}-01-01`).getTime()/1000);
+  const yearEnd=Math.floor(new Date(`${new Date().getFullYear()+1}-01-01`).getTime()/1000);
+  const acts=await fetchActivitiesInRange(yearStart,yearEnd);
+  acts.sort((a,b)=>new Date(b.start_date_local)-new Date(a.start_date_local));
+  S.allYearActs=acts;
+}
+
+async function loadLastYearActivities(){
+  const ly=new Date().getFullYear()-1;
+  const start=Math.floor(new Date(`${ly}-01-01`).getTime()/1000);
+  const end=Math.floor(new Date(`${ly+1}-01-01`).getTime()/1000);
+  const acts=await fetchActivitiesInRange(start,end);
+  S.lastYearActs=acts;
 }
 
 function computeCounters(){
@@ -547,16 +689,15 @@ function loadRecentActivities(){
   const since=Date.now()-30*24*3600*1000;
   const acts=S.allYearActs.filter(a=>new Date(a.start_date_local).getTime()>since);
   allActivities=acts;
-  if(!acts.length){container.innerHTML='<div class="empty-state"><div class="ei">📭</div><p>Žiadne aktivity za posledných 30 dní.</p></div>';return;}
+  if(!acts.length){container.innerHTML='<div class="empty-state"><div class="ei">📭</div><p>No activities in the last 30 days.</p></div>';return;}
   const editedIds=JSON.parse(ls('edited_ids')||'[]');
   const html=acts.map(a=>{
     const raw=a.sport_type||a.type;
-    const mappedType=SPORT_MAP[raw]||null;
-    const cfg=mappedType?SPORT_CONFIG[mappedType]:{emoji:'🏅',label:raw};
+    const cfg=SPORT_MAP[raw]?SPORT_CONFIG[SPORT_MAP[raw]]:{emoji:'🏅',label:raw};
     const done=editedIds.includes(a.id);
     const dist=a.distance?(a.distance/1000).toFixed(1)+'km':'';
     const dur=a.moving_time?Math.round(a.moving_time/60)+'min':'';
-    const date=new Date(a.start_date_local).toLocaleDateString('sk-SK',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    const date=new Date(a.start_date_local).toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
     return `<div class="act-item${done?' done':''}" onclick="selectActivity(${a.id})" id="act-${a.id}">
       <div class="act-emoji">${cfg.emoji}</div>
       <div class="act-info">
@@ -572,8 +713,7 @@ function loadRecentActivities(){
 function selectActivity(id){
   document.querySelectorAll('.act-item').forEach(el=>el.classList.remove('selected'));
   document.getElementById('act-'+id)?.classList.add('selected');
-  const a=allActivities.find(x=>x.id===id);
-  if(!a) return;
+  const a=allActivities.find(x=>x.id===id); if(!a) return;
   S.editActivity=a;
   const raw=a.sport_type||a.type;
   S.editSport=SPORT_MAP[raw]||'Ride';
@@ -590,7 +730,7 @@ function selectActivity(id){
   document.getElementById('ep-desc-sk').value='';
   document.getElementById('ep-desc-en').value='';
   document.getElementById('trans-status').textContent='';
-  document.getElementById('ai-suggestions-container').innerHTML='<span style="font-size:0.82rem;color:var(--muted)">Klikni Generovať.</span>';
+  document.getElementById('ai-suggestions-container').innerHTML='<span style="font-size:0.82rem;color:var(--muted)">Tap Generate. If you wrote a description, AI will use it.</span>';
   document.getElementById('ai-section').style.display=S.editSport==='Ride'?'block':'none';
   renderPhotoGrid(); updateEpPreview();
   const panel=document.getElementById('edit-panel');
@@ -619,30 +759,42 @@ function closeEditPanel(){
   S.editActivity=null; S.photos=[];
 }
 
+// ── AI SUGGESTIONS ────────────────────────────────────────────────────────
 async function generateAISuggestions(){
-  if(!S.geminiKey){showStatus('ep-status','Nastav Gemini API kľúč v Nastaveniach.','error');return;}
+  if(!S.geminiKey){showStatus('ep-status','Set Gemini API key in Settings.','error');return;}
   const a=S.editActivity; if(!a) return;
   const btn=document.getElementById('ai-gen-btn');
   btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
   const container=document.getElementById('ai-suggestions-container');
-  container.innerHTML='<span style="font-size:0.82rem;color:var(--muted)">⟳ Generujem…</span>';
+  container.innerHTML='<span style="font-size:0.82rem;color:var(--muted)">⟳ Generating…</span>';
+
   const rideNames=S.allYearActs.filter(x=>SPORT_MAP[x.sport_type||x.type]==='Ride'&&x.name&&!/afternoon|morning ride|evening ride|lunch ride/i.test(x.name)).slice(0,20).map(x=>x.name);
   const dist=a.distance?(a.distance/1000).toFixed(1)+'km':'';
   const dur=a.moving_time?Math.round(a.moving_time/60)+'min':'';
-  const elev=a.total_elevation_gain?Math.round(a.total_elevation_gain)+'m':'';
+  const elev=a.total_elevation_gain?Math.round(a.total_elevation_gain)+'m elevation':'';
   const hour=new Date(a.start_date_local).getHours();
   const tod=hour<10?'morning':hour<13?'midday':hour<17?'afternoon':'evening';
-  const prompt=`You help a cyclist name Strava activities. Their recent activity names: ${rideNames.length?rideNames.join(', '):'(none yet)'}. New activity: ${dist}${dur?' / '+dur:''}${elev?' / '+elev+' elevation':''}, ${tod}. Generate exactly 3 short creative subtitle suggestions (NOT including the number prefix). English, energetic, personal, max 4 words. Respond ONLY with JSON array of 3 strings.`;
-  try {
+
+  // Use Slovak description if available
+  const skDesc=document.getElementById('ep-desc-sk').value.trim();
+  const descContext=skDesc?`\n\nThe athlete also wrote this description (in Slovak): "${skDesc}". Use this to make the title more specific and relevant.`:'';
+
+  const prompt=`You help a cyclist name Strava activities. Their recent activity names for style reference: ${rideNames.length?rideNames.join(', '):'(none yet)'}.
+
+Activity details: ${dist}${dur?' / '+dur:''}${elev?' / '+elev:''}, ${tod}.${descContext}
+
+Generate exactly 3 short creative subtitle suggestions (NOT including the number prefix like #7/26). English, energetic, personal, max 4 words each. Respond ONLY with a JSON array of 3 strings.`;
+
+  try{
     const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${S.geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
     const d=await r.json();
     const text=d.candidates?.[0]?.content?.parts?.[0]?.text||'[]';
     const suggestions=JSON.parse(text.replace(/```json|```/g,'').trim());
     if(Array.isArray(suggestions)&&suggestions.length){
-      container.innerHTML=suggestions.map((s,i)=>`<div class="ai-suggestion" onclick="applyAI(this,'${s.replace(/'/g,"\\'")}')"><div class="as-label">Návrh ${i+1}</div><div class="as-val">${S.editEmoji} #${document.getElementById('ep-num').value}/${YEAR_SUFFIX} ${s}</div></div>`).join('');
-    } else { container.innerHTML='<span style="font-size:0.82rem;color:var(--muted)">⚠ Skús znova.</span>'; }
-  } catch(e){ container.innerHTML=`<span style="font-size:0.82rem;color:#fca5a5">⚠ ${e.message}</span>`; }
-  btn.disabled=false; btn.innerHTML='Generovať';
+      container.innerHTML=suggestions.map((s,i)=>`<div class="ai-suggestion" onclick="applyAI(this,'${s.replace(/'/g,"\\'")}')"><div class="as-label">Suggestion ${i+1}</div><div class="as-val">${S.editEmoji} #${document.getElementById('ep-num').value}/${YEAR_SUFFIX} ${s}</div></div>`).join('');
+    } else { container.innerHTML='<span style="font-size:0.82rem;color:var(--muted)">⚠ Try again.</span>'; }
+  }catch(e){ container.innerHTML=`<span style="font-size:0.82rem;color:#fca5a5">⚠ ${e.message}</span>`; }
+  btn.disabled=false; btn.innerHTML='Generate';
 }
 
 function applyAI(el,name){
@@ -652,44 +804,44 @@ function applyAI(el,name){
   updateEpPreview();
 }
 
+// ── TRANSLATE ─────────────────────────────────────────────────────────────
 async function googleTranslate(text){
   const r=await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=sk&tl=en&dt=t&q=${encodeURIComponent(text)}`);
   const d=await r.json();
   return d[0].map(x=>x[0]).join('');
 }
-
 async function translateDesc(){
   const sk=document.getElementById('ep-desc-sk').value.trim();
-  if(!sk){showStatus('ep-status','Zadaj slovenský popis.','error');return;}
+  if(!sk){showStatus('ep-status','Write a Slovak description first.','error');return;}
   const btn=document.getElementById('trans-btn');
   btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
   document.getElementById('trans-status').textContent='⟳';
   try{document.getElementById('ep-desc-en').value=await googleTranslate(sk);document.getElementById('trans-status').textContent='✓';}
   catch(e){document.getElementById('trans-status').textContent='⚠';}
-  btn.disabled=false; btn.innerHTML='🌐 Preložiť do EN';
+  btn.disabled=false; btn.innerHTML='🌐 Translate to EN';
 }
-
 async function translateDescMan(){
   const sk=document.getElementById('man-desc-sk').value.trim(); if(!sk) return;
   const btn=event.currentTarget; btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
   document.getElementById('man-trans-status').textContent='⟳';
   try{document.getElementById('man-desc-en').value=await googleTranslate(sk);document.getElementById('man-trans-status').textContent='✓';}
   catch(e){document.getElementById('man-trans-status').textContent='⚠';}
-  btn.disabled=false; btn.innerHTML='🌐 Preložiť';
+  btn.disabled=false; btn.innerHTML='🌐 Translate';
 }
-
 function clearTransStatus(){document.getElementById('trans-status').textContent='';}
 
+// ── PHOTOS ────────────────────────────────────────────────────────────────
 function handlePhotoSelect(e){addPhotos(Array.from(e.target.files));}
 function handlePhotoDrop(e){e.preventDefault();document.getElementById('photo-zone').classList.remove('dragover');addPhotos(Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/')));}
 function addPhotos(files){for(const f of files){if(S.photos.length>=10)break;S.photos.push({file:f,url:URL.createObjectURL(f)});}renderPhotoGrid();}
 function removePhoto(i){URL.revokeObjectURL(S.photos[i].url);S.photos.splice(i,1);renderPhotoGrid();}
 function renderPhotoGrid(){document.getElementById('photo-grid').innerHTML=S.photos.map((p,i)=>`<div class="photo-thumb"><img src="${p.url}"><button class="del-photo" onclick="removePhoto(${i})">✕</button></div>`).join('');}
 
+// ── SAVE ACTIVITY ─────────────────────────────────────────────────────────
 async function saveActivity(){
-  if(!S.editActivity||!await ensureToken()){showStatus('ep-status','Chyba tokenu.','error');return;}
+  if(!S.editActivity||!await ensureToken()){showStatus('ep-status','Token error.','error');return;}
   const btn=document.getElementById('ep-save-btn');
-  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Ukladám…';
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Saving…';
   const num=document.getElementById('ep-num').value;
   const sub=document.getElementById('ep-subtitle').value.trim();
   const newName=`${S.editEmoji} #${num}/${YEAR_SUFFIX}${sub?' '+sub:''}`;
@@ -703,7 +855,7 @@ async function saveActivity(){
       prog.classList.add('show');
       for(let i=0;i<S.photos.length;i++){
         bar.style.width=Math.round((i/S.photos.length)*100)+'%';
-        showStatus('ep-status',`Nahrávam fotku ${i+1}/${S.photos.length}…`,'info');
+        showStatus('ep-status',`Uploading photo ${i+1}/${S.photos.length}…`,'info');
         const fd=new FormData(); fd.append('file',S.photos[i].file); fd.append('activity_id',S.editActivity.id);
         await fetch('https://www.strava.com/api/v3/uploads',{method:'POST',headers:{Authorization:'Bearer '+S.accessToken},body:fd});
       }
@@ -715,61 +867,149 @@ async function saveActivity(){
     document.getElementById('act-'+S.editActivity.id)?.classList.add('done');
     const nameEl=document.querySelector('#act-'+S.editActivity.id+' .act-name');if(nameEl)nameEl.textContent=newName;
     const idx=S.allYearActs.findIndex(x=>x.id===S.editActivity.id);if(idx>=0)S.allYearActs[idx].name=newName;
-    showStatus('ep-status',`✅ "${newName}" uložené!`+(S.photos.length?` (+${S.photos.length} foto)`:'')+' Skontroluj na Strava.','success');
+    showStatus('ep-status',`✅ "${newName}" saved!`+(S.photos.length?` (+${S.photos.length} photos)`:'')+' Check Strava.','success');
     S.photos=[]; renderPhotoGrid();
-  }catch(e){showStatus('ep-status','Chyba: '+e.message,'error');}
-  btn.disabled=false; btn.innerHTML='💾 Uložiť na Strava';
+  }catch(e){showStatus('ep-status','Error: '+e.message,'error');}
+  btn.disabled=false; btn.innerHTML='💾 Save to Strava';
 }
 
+// ── MANUAL UPLOAD ─────────────────────────────────────────────────────────
 function manSelectSport(el,sport,emoji){document.querySelectorAll('#man-sport-select .sport-opt').forEach(b=>b.classList.remove('active'));el.classList.add('active');S.manSport=sport;S.manEmoji=emoji;updateManPreview();}
 function updateManPreview(){const n=(S.counters[S.manSport]||0)+1;const sub=document.getElementById('man-subtitle')?.value.trim()||'';document.getElementById('man-name-preview').textContent=`${S.manEmoji} #${n}/${YEAR_SUFFIX}${sub?' '+sub:''}`;}
 
 async function uploadManual(){
-  if(!S.accessToken||!await ensureToken()){showStatus('man-status','Pripoč sa na Strava.','error');return;}
+  if(!S.accessToken||!await ensureToken()){showStatus('man-status','Connect to Strava first.','error');return;}
   const date=document.getElementById('man-date').value,time=document.getElementById('man-time').value,dur=parseInt(document.getElementById('man-dur').value),dist=parseFloat(document.getElementById('man-dist').value)||0,sub=document.getElementById('man-subtitle').value.trim();
   const descEn=document.getElementById('man-desc-en').value.trim()||document.getElementById('man-desc-sk').value.trim();
-  if(!date||!time||!dur){showStatus('man-status','Vyplň dátum, čas a trvanie.','error');return;}
+  if(!date||!time||!dur){showStatus('man-status','Fill in date, time and duration.','error');return;}
   const n=(S.counters[S.manSport]||0)+1,name=`${S.manEmoji} #${n}/${YEAR_SUFFIX}${sub?' '+sub:''}`;
-  const btn=document.getElementById('man-upload-btn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Nahrávam…';
+  const btn=document.getElementById('man-upload-btn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Uploading…';
   try{
     const startISO=new Date(`${date}T${time}:00`).toISOString().replace('.000Z','Z');
     const body={name,sport_type:S.manSport,start_date_local:startISO,elapsed_time:dur*60,description:descEn};
     if(dist>0)body.distance=dist*1000;
     const r=await fetch('https://www.strava.com/api/v3/activities',{method:'POST',headers:{Authorization:'Bearer '+S.accessToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
-    if(d.id){S.counters[S.manSport]=n;lss('strava_counters',JSON.stringify(S.counters));const cEl=document.getElementById('c-'+S.manSport);if(cEl){cEl.textContent='#'+(n+1);cEl.className='ct-num';}updateManPreview();showStatus('man-status',`✅ "${name}" nahraté!`,'success');['man-dur','man-dist','man-desc-sk','man-desc-en','man-subtitle'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});}
-    else{showStatus('man-status','Chyba: '+(d.message||JSON.stringify(d)),'error');}
-  }catch(e){showStatus('man-status','Chyba: '+e.message,'error');}
-  btn.disabled=false;btn.innerHTML='⬆️ Nahrať na Strava';
+    if(d.id){S.counters[S.manSport]=n;lss('strava_counters',JSON.stringify(S.counters));const cEl=document.getElementById('c-'+S.manSport);if(cEl){cEl.textContent='#'+(n+1);cEl.className='ct-num';}updateManPreview();showStatus('man-status',`✅ "${name}" uploaded!`,'success');['man-dur','man-dist','man-desc-sk','man-desc-en','man-subtitle'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});}
+    else{showStatus('man-status','Error: '+(d.message||JSON.stringify(d)),'error');}
+  }catch(e){showStatus('man-status','Error: '+e.message,'error');}
+  btn.disabled=false;btn.innerHTML='⬆️ Upload to Strava';
 }
 
-function switchPeriod(period,btn){S.statsPeriod=period;document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('month-selector').style.display=period==='month'?'flex':'none';renderStats();}
+// ── STATS ─────────────────────────────────────────────────────────────────
+function switchPeriod(period,btn){
+  S.statsPeriod=period;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('month-selector').style.display=period==='month'?'flex':'none';
+  renderStats();
+}
 function changeMonth(dir){S.statsMonth+=dir;if(S.statsMonth<0){S.statsMonth=11;S.statsYear--;}if(S.statsMonth>11){S.statsMonth=0;S.statsYear++;}renderStats();}
+
+function aggActs(acts){
+  const agg={};
+  Object.keys(SPORT_CONFIG).forEach(t=>{agg[t]={count:0,dist:0,time:0,elev:0};});
+  for(const a of acts){const type=SPORT_MAP[a.sport_type||a.type];if(type&&type in agg){agg[type].count++;agg[type].dist+=a.distance||0;agg[type].time+=a.moving_time||0;agg[type].elev+=a.total_elevation_gain||0;}}
+  return agg;
+}
+
+function fmtTime(secs){const h=Math.floor(secs/3600),m=Math.round((secs%3600)/60);return h>0?`${h}h ${m}min`:`${m}min`;}
+function fmtKm(m){return (m/1000).toFixed(1);}
+function diffArrow(cur,prev){if(!prev) return '';const pct=Math.round(((cur-prev)/prev)*100);if(pct>0) return `<span class="sr-compare up">▲ ${pct}% vs last year</span>`;if(pct<0) return `<span class="sr-compare down">▼ ${Math.abs(pct)}% vs last year</span>`;return `<span class="sr-compare">= same as last year</span>`;}
 
 function renderStats(){
   const label=document.getElementById('month-label');
-  if(label)label.textContent=MONTHS_SK[S.statsMonth]+' '+S.statsYear;
-  if(!S.allYearActs.length){document.getElementById('stats-content').innerHTML='<div class="empty-state"><div class="ei">📊</div><p>Načítaj aktivity najprv.</p></div>';return;}
-  let acts=S.allYearActs;
-  if(S.statsPeriod==='month')acts=acts.filter(a=>{const d=new Date(a.start_date_local);return d.getMonth()===S.statsMonth&&d.getFullYear()===S.statsYear;});
-  const agg={};Object.keys(SPORT_CONFIG).forEach(t=>{agg[t]={count:0,dist:0,time:0,elev:0};});
-  for(const a of acts){const type=SPORT_MAP[a.sport_type||a.type];if(type&&type in agg){agg[type].count++;agg[type].dist+=a.distance||0;agg[type].time+=a.moving_time||0;agg[type].elev+=a.total_elevation_gain||0;}}
+  if(label) label.textContent=MONTHS_EN[S.statsMonth]+' '+S.statsYear;
+
+  if(!S.allYearActs.length){document.getElementById('stats-content').innerHTML='<div class="empty-state"><div class="ei">📊</div><p>Load activities first.</p></div>';return;}
+
+  if(S.statsPeriod==='month'){
+    renderMonthStats();
+  } else if(S.statsPeriod==='year'){
+    renderYearStats();
+  } else {
+    renderYTDStats();
+  }
+}
+
+function renderMonthStats(){
+  const m=S.statsMonth, y=S.statsYear;
+  const ly=y-1;
+  const thisActs=S.allYearActs.filter(a=>{const d=new Date(a.start_date_local);return d.getMonth()===m&&d.getFullYear()===y;});
+  const lastActs=S.lastYearActs.filter(a=>{const d=new Date(a.start_date_local);return d.getMonth()===m&&d.getFullYear()===ly;});
+  const cur=aggActs(thisActs), prev=aggActs(lastActs);
+
   const html=Object.entries(SPORT_CONFIG).map(([type,cfg])=>{
-    const d=agg[type];
-    const km=(d.dist/1000).toFixed(1);
-    const hrs=Math.floor(d.time/3600),mins=Math.round((d.time%3600)/60);
-    const timeStr=hrs>0?`${hrs}h ${mins}min`:`${mins}min`;
+    const c=cur[type], p=prev[type];
     const showDist=type==='Ride'||type==='Run'||type==='Hike';
-    const showElev=type==='Ride'||type==='Hike';
-    if(!d.count)return `<div class="stat-card"><div class="sc-header"><div class="sc-emoji">${cfg.emoji}</div><div class="sc-title">${cfg.label}</div></div><div style="font-size:0.82rem;color:var(--muted)">Žiadne aktivity</div></div>`;
-    return `<div class="stat-card"><div class="sc-header"><div class="sc-emoji">${cfg.emoji}</div><div class="sc-title">${cfg.label}</div></div>
-      <div class="stat-row"><span class="sr-label">Počet</span><span class="sr-val">${d.count}<span>aktivít</span></span></div>
-      <div class="stat-row"><span class="sr-label">Čas</span><span class="sr-val">${timeStr}</span></div>
-      ${showDist?`<div class="stat-row"><span class="sr-label">Vzdialenosť</span><span class="sr-val">${km}<span>km</span></span></div>`:''}
-      ${showElev&&d.elev>0?`<div class="stat-row"><span class="sr-label">Prevýšenie</span><span class="sr-val">${Math.round(d.elev)}<span>m</span></span></div>`:''}
+    const showElev=(type==='Ride'||type==='Hike')&&c.elev>0;
+    if(!c.count&&!p.count) return `<div class="stat-card"><div class="sc-header"><div class="sc-emoji">${cfg.emoji}</div><div class="sc-title">${cfg.label}</div></div><div style="font-size:0.82rem;color:var(--muted)">No activities</div></div>`;
+    return `<div class="stat-card">
+      <div class="sc-header"><div class="sc-emoji">${cfg.emoji}</div><div class="sc-title">${cfg.label}</div></div>
+      <div class="stat-row"><span class="sr-label">Sessions</span><div><span class="sr-val">${c.count}<span class="sr-unit">activities</span></span>${diffArrow(c.count,p.count)}</div></div>
+      <div class="stat-row"><span class="sr-label">Time</span><div><span class="sr-val">${fmtTime(c.time)}</span>${diffArrow(c.time,p.time)}</div></div>
+      ${showDist?`<div class="stat-row"><span class="sr-label">Distance</span><div><span class="sr-val">${fmtKm(c.dist)}<span class="sr-unit">km</span></span>${diffArrow(c.dist,p.dist)}</div></div>`:''}
+      ${showElev?`<div class="stat-row"><span class="sr-label">Elevation</span><div><span class="sr-val">${Math.round(c.elev)}<span class="sr-unit">m</span></span>${diffArrow(c.elev,p.elev)}</div></div>`:''}
+      ${p.count>0?`<div style="margin-top:8px"><div class="bar-chart">
+        <div class="bar-row"><span class="bar-year">${y}</span><div class="bar-track"><div class="bar-fill this-year" style="width:${Math.min(100,showDist?Math.round(c.dist/Math.max(c.dist,p.dist)*100):Math.round(c.count/Math.max(c.count,p.count)*100))}%"><span class="bar-val">${showDist?fmtKm(c.dist)+'km':c.count}</span></div></div></div>
+        <div class="bar-row"><span class="bar-year">${ly}</span><div class="bar-track"><div class="bar-fill last-year" style="width:${Math.min(100,showDist?Math.round(p.dist/Math.max(c.dist,p.dist)*100):Math.round(p.count/Math.max(c.count,p.count)*100))}%"><span class="bar-val">${showDist?fmtKm(p.dist)+'km':p.count}</span></div></div></div>
+      </div></div>`:''}
     </div>`;
   }).join('');
-  document.getElementById('stats-content').innerHTML=`<div class="stats-grid">${html}</div>`;
+  document.getElementById('stats-content').innerHTML=html;
+}
+
+function renderYearStats(){
+  const y=new Date().getFullYear(), ly=y-1;
+  const cur=aggActs(S.allYearActs), prev=aggActs(S.lastYearActs);
+  const html=Object.entries(SPORT_CONFIG).map(([type,cfg])=>{
+    const c=cur[type], p=prev[type];
+    const showDist=type==='Ride'||type==='Run'||type==='Hike';
+    if(!c.count&&!p.count) return `<div class="stat-card"><div class="sc-header"><div class="sc-emoji">${cfg.emoji}</div><div class="sc-title">${cfg.label}</div></div><div style="font-size:0.82rem;color:var(--muted)">No activities</div></div>`;
+    return `<div class="stat-card">
+      <div class="sc-header"><div class="sc-emoji">${cfg.emoji}</div><div class="sc-title">${cfg.label}</div></div>
+      <div class="stat-row"><span class="sr-label">Sessions</span><div><span class="sr-val">${c.count}<span class="sr-unit">activities</span></span>${diffArrow(c.count,p.count)}</div></div>
+      <div class="stat-row"><span class="sr-label">Time</span><div><span class="sr-val">${fmtTime(c.time)}</span>${diffArrow(c.time,p.time)}</div></div>
+      ${showDist?`<div class="stat-row"><span class="sr-label">Distance</span><div><span class="sr-val">${fmtKm(c.dist)}<span class="sr-unit">km</span></span>${diffArrow(c.dist,p.dist)}</div></div>`:''}
+      ${(type==='Ride'||type==='Hike')&&c.elev>0?`<div class="stat-row"><span class="sr-label">Elevation</span><div><span class="sr-val">${Math.round(c.elev)}<span class="sr-unit">m</span></span>${diffArrow(c.elev,p.elev)}</div></div>`:''}
+    </div>`;
+  }).join('');
+  document.getElementById('stats-content').innerHTML=html;
+}
+
+function renderYTDStats(){
+  const now=new Date();
+  const todayDoy=Math.floor((now-(new Date(now.getFullYear(),0,0)))/(1000*60*60*24));
+  const ly=now.getFullYear()-1;
+  const lyEquivDate=new Date(ly,now.getMonth(),now.getDate());
+  const lyDoy=Math.floor((lyEquivDate-(new Date(ly,0,0)))/(1000*60*60*24));
+
+  const curActs=S.allYearActs;
+  const lyActs=S.lastYearActs.filter(a=>{const d=new Date(a.start_date_local);const doy=Math.floor((d-(new Date(d.getFullYear(),0,0)))/(1000*60*60*24));return doy<=lyDoy;});
+
+  const cur=aggActs(curActs), prev=aggActs(lyActs);
+
+  const tiles=Object.entries(SPORT_CONFIG).map(([type,cfg])=>{
+    const c=cur[type], p=prev[type];
+    const showDist=type==='Ride'||type==='Run'||type==='Hike';
+    const mainVal=showDist?fmtKm(c.dist):c.count;
+    const mainUnit=showDist?'km':'sessions';
+    const prevVal=showDist?fmtKm(p.dist):p.count;
+    const diff=showDist?(c.dist-p.dist)/1000:(c.count-p.count);
+    const diffStr=diff>0?`▲ ${showDist?diff.toFixed(1):diff}${showDist?' km':''} more`:(diff<0?`▼ ${showDist?Math.abs(diff).toFixed(1):Math.abs(diff)}${showDist?' km':''} less`:'= same');
+    const diffClass=diff>0?'up':diff<0?'down':'neutral';
+    return `<div class="ytd-tile">
+      <div style="font-size:1.4rem;margin-bottom:4px">${cfg.emoji}</div>
+      <div class="ytd-label">${cfg.label}</div>
+      <div class="ytd-val">${mainVal}<span class="ytd-unit">${mainUnit}</span></div>
+      <div class="ytd-diff ${diffClass}">${diffStr}</div>
+      <div style="font-size:0.68rem;color:var(--muted);margin-top:2px">vs ${prevVal}${showDist?' km':''} last year</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('stats-content').innerHTML=`
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:12px">Year to date: day ${todayDoy} of ${now.getFullYear()} vs same point in ${ly}</div>
+    <div class="ytd-grid">${tiles}</div>`;
 }
 
 function showStatus(id,msg,type){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.className=`status ${type} show`;}

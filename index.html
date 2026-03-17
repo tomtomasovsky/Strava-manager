@@ -285,7 +285,7 @@ input[type=file] { display: none; }
 <div class="header">
   <div class="logo">Strava <span>Manager</span></div>
   <div class="header-right">
-    <span class="version">v5.0</span>
+    <span class="version">v5.1</span>
     <div class="conn-dot" id="hdr-dot"></div>
   </div>
 </div>
@@ -674,7 +674,7 @@ function computeCounters(){
     if(type&&type in counts){
       const emoji=SPORT_CONFIG[type]?.emoji||'';
       const esc=emoji.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      const m=(a.name||'').match(new RegExp(esc+'\\s*#?(\\d+)\\/'+YEAR_SUFFIX));
+      const m=(a.name||'').match(new RegExp('(?:'+esc+'\\s*)?#?(\\d+)\\/'+YEAR_SUFFIX));
       if(m){const n=parseInt(m[1]);if(n>counts[type])counts[type]=n;}
     }
   }

@@ -435,7 +435,7 @@ window.onload = async () => {
   if(S.geminiKey) document.getElementById('s-gemini').value=S.geminiKey;
   document.getElementById('man-date').value=new Date().toISOString().slice(0,10);
   const p=new URLSearchParams(location.search);
-  if(p.get('code')){ await handleOAuthCallback(p.get('code')); history.replaceState({},\'\',REDIRECT_URI); }
+  if(p.get('code')){ await handleOAuthCallback(p.get('code')); history.replaceState({},'',REDIRECT_URI); }
   if(S.accessToken){ updateConnectedUI(); await loadAll(); }
   updateManPreview();
 };

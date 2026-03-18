@@ -78,10 +78,17 @@ body {
 /* ── PULL TO REFRESH ── */
 .ptr-indicator {
   text-align: center; padding: 0; height: 0; overflow: hidden;
-  transition: height 0.2s, padding 0.2s;
-  color: var(--muted); font-size: 0.82rem;
+  transition: height 0.25s, padding 0.25s;
+  color: var(--orange); font-size: 0.82rem; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
 }
-.ptr-indicator.show { height: 40px; padding: 10px; }
+.ptr-indicator.pulling { height: 44px; padding: 10px; }
+.ptr-indicator.refreshing { height: 44px; padding: 10px; }
+.ptr-arrow { font-size: 1.1rem; transition: transform 0.25s; display: inline-block; }
+.ptr-indicator.ready .ptr-arrow { transform: rotate(180deg); }
+.ptr-spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(252,76,2,0.3); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.6s linear infinite; }
+.ptr-indicator.refreshing .ptr-spinner { display: inline-block; }
+.ptr-indicator.refreshing .ptr-arrow { display: none; }
 
 /* ── PAGES ── */
 .page { display: none; }
@@ -298,13 +305,17 @@ input[type=file] { display: none; }
 <div class="header">
   <div class="logo">Strava <span>Manager</span></div>
   <div class="header-right">
-    <span class="version">v6.0</span>
+    <span class="version">v6.2</span>
     <div class="conn-dot" id="hdr-dot"></div>
   </div>
 </div>
 
 <!-- Pull to refresh indicator -->
-<div class="ptr-indicator" id="ptr-indicator">↑ Release to refresh</div>
+<div class="ptr-indicator" id="ptr-indicator">
+  <span class="ptr-arrow">↓</span>
+  <div class="ptr-spinner"></div>
+  <span class="ptr-text">Pull to refresh</span>
+</div>
 
 <!-- ══ ACTIVITIES ══ -->
 <div class="page active" id="page-activities">
@@ -610,19 +621,45 @@ window.onload = async () => {
 
 // ── PULL TO REFRESH ──────────────────────────────────────────────────────
 function initPullToRefresh(){
-  let startY=0, pulling=false;
-  document.addEventListener('touchstart',e=>{if(window.scrollY===0) startY=e.touches[0].clientY;},{ passive:true });
+  let startY=0, pulling=false, ready=false;
+  const ind=document.getElementById('ptr-indicator');
+  const txt=ind.querySelector('.ptr-text');
+
+  document.addEventListener('touchstart',e=>{
+    if(window.scrollY===0) startY=e.touches[0].clientY;
+  },{passive:true});
+
   document.addEventListener('touchmove',e=>{
     if(!startY) return;
     const dy=e.touches[0].clientY-startY;
-    if(dy>60 && window.scrollY===0){
+    if(dy>10 && window.scrollY===0){
       pulling=true;
-      document.getElementById('ptr-indicator').classList.add('show');
+      ind.classList.add('pulling');
+      if(dy>60){
+        ready=true;
+        ind.classList.add('ready');
+        txt.textContent='Release to refresh';
+      } else {
+        ready=false;
+        ind.classList.remove('ready');
+        txt.textContent='Pull to refresh';
+      }
     }
-  },{ passive:true });
-  document.addEventListener('touchend',()=>{
-    if(pulling){ pulling=false; document.getElementById('ptr-indicator').classList.remove('show'); loadAll(); }
-    startY=0;
+  },{passive:true});
+
+  document.addEventListener('touchend',async ()=>{
+    if(pulling && ready){
+      ind.classList.remove('pulling','ready');
+      ind.classList.add('refreshing');
+      txt.textContent='Refreshing…';
+      await loadAll();
+      ind.classList.remove('refreshing');
+      ind.style.height='0';
+      txt.textContent='Pull to refresh';
+    } else if(pulling){
+      ind.classList.remove('pulling','ready');
+    }
+    pulling=false; ready=false; startY=0;
   });
 }
 
@@ -826,6 +863,8 @@ function selectActivity(id){
   document.getElementById('ep-desc-en').value=a.description||'';
   document.getElementById('ep-desc-sk').value='';
   document.getElementById('trans-status').textContent='';
+  const epStatus=document.getElementById('ep-status');
+  if(epStatus){epStatus.textContent='';epStatus.className='status';}
   document.getElementById('ai-suggestions-container').innerHTML='<span style="font-size:0.82rem;color:var(--muted)">Tap Generate. If you wrote a description, AI will use it.</span>';
   document.getElementById('ai-section').style.display=(S.editSport==='Ride'||S.editSport==='Run'||S.editSport==='Hike')?'block':'none';
 
@@ -1039,6 +1078,44 @@ function aggActs(acts){
   for(const a of acts){const type=SPORT_MAP[a.sport_type||a.type];if(type&&type in agg){agg[type].count++;agg[type].dist+=a.distance||0;agg[type].time+=a.moving_time||0;agg[type].elev+=a.total_elevation_gain||0;}}
   return agg;
 }
+
+const MTB_TYPES=['MountainBikeRide','EMountainBikeRide'];
+
+function aggBikeBreakdown(acts){
+  const road={count:0,dist:0},mtb={count:0,dist:0};
+  for(const a of acts){const raw=a.sport_type||a.type;if(SPORT_MAP[raw]==='Ride'){if(MTB_TYPES.includes(raw)){mtb.count++;mtb.dist+=a.distance||0;}else{road.count++;road.dist+=a.distance||0;}}}
+  return {road,mtb};
+}
+
+function renderBikeBreakdown(acts){
+  const {road,mtb}=aggBikeBreakdown(acts);
+  const total=road.dist+mtb.dist;
+  if(!total||(!road.dist||!mtb.dist)) return '';
+  const roadPct=Math.round(road.dist/total*100);
+  const mtbPct=100-roadPct;
+  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:1.1rem">🚴‍♂️🚵</span>
+      <span style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2)">Road vs MTB</span>
+    </div>
+    <div style="display:flex;border-radius:8px;overflow:hidden;height:28px;margin-bottom:10px">
+      <div style="width:${roadPct}%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;color:white;padding:0 6px;white-space:nowrap">🛣️ ${roadPct}%</div>
+      <div style="width:${mtbPct}%;background:#555;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;color:white;padding:0 6px;white-space:nowrap">🚵 ${mtbPct}%</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="text-align:center;padding:10px;background:rgba(252,76,2,0.08);border:1px solid rgba(252,76,2,0.2);border-radius:8px">
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:3px">🛣️ Road</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:800;color:var(--orange)">${fmtKm(road.dist)}<span style="font-size:0.72rem;color:var(--muted);font-family:Barlow,sans-serif;font-weight:400"> km</span></div>
+        <div style="font-size:0.72rem;color:var(--muted)">${road.count} rides</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:rgba(100,100,100,0.1);border:1px solid var(--border2);border-radius:8px">
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:3px">🚵 MTB</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:800;color:var(--text2)">${fmtKm(mtb.dist)}<span style="font-size:0.72rem;color:var(--muted);font-family:Barlow,sans-serif;font-weight:400"> km</span></div>
+        <div style="font-size:0.72rem;color:var(--muted)">${mtb.count} rides</div>
+      </div>
+    </div>
+  </div>`;
+}
 function fmtTime(s){const h=Math.floor(s/3600),m=Math.round((s%3600)/60);return h>0?`${h}h ${m}min`:`${m}min`;}
 function fmtKm(m){return (m/1000).toFixed(1);}
 function diffArrow(cur,prev){if(!prev)return '';const pct=Math.round(((cur-prev)/prev)*100);if(pct>0)return `<span class="sr-compare up">▲ ${pct}% vs last year</span>`;if(pct<0)return `<span class="sr-compare down">▼ ${Math.abs(pct)}% vs last year</span>`;return `<span class="sr-compare">= same as last year</span>`;}
@@ -1073,7 +1150,7 @@ function renderMonthStats(){
       </div>`:''}
     </div>`;
   }).join('');
-  document.getElementById('stats-content').innerHTML=html;
+  document.getElementById('stats-content').innerHTML=html+renderBikeBreakdown(S.allYearActs.filter(a=>{const d=new Date(a.start_date_local);return d.getMonth()===m&&d.getFullYear()===y;}));
 }
 
 function renderYearStats(){
@@ -1091,7 +1168,7 @@ function renderYearStats(){
       ${(type==='Ride'||type==='Hike')&&c.elev>0?`<div class="stat-row"><span class="sr-label">Elevation</span><span class="sr-val">${Math.round(c.elev)}<span class="sr-unit">m</span></span></div>`:''}
     </div>`;
   }).join('');
-  document.getElementById('stats-content').innerHTML=`<div style="font-size:0.82rem;color:var(--muted);margin-bottom:12px">${CUR_YEAR} — full year summary so far</div>`+html;
+  document.getElementById('stats-content').innerHTML=`<div style="font-size:0.82rem;color:var(--muted);margin-bottom:12px">${CUR_YEAR} — full year summary so far</div>`+html+renderBikeBreakdown(S.allYearActs);
 }
 
 function renderYTDStats(){
@@ -1120,7 +1197,7 @@ function renderYTDStats(){
       <div style="font-size:0.68rem;color:var(--muted);margin-top:2px">vs ${prevVal}${showDist?' km':' sessions'} in ${ly}</div>
     </div>`;
   }).join('');
-  document.getElementById('stats-content').innerHTML=`<div style="font-size:0.82rem;color:var(--muted);margin-bottom:12px">Day ${todayDoy} of ${CUR_YEAR} vs same point in ${ly}</div><div class="ytd-grid">${tiles}</div>`;
+  document.getElementById('stats-content').innerHTML=`<div style="font-size:0.82rem;color:var(--muted);margin-bottom:12px">Day ${todayDoy} of ${CUR_YEAR} vs same point in ${ly}</div><div class="ytd-grid">${tiles}</div>`+renderBikeBreakdown(S.allYearActs);
 }
 
 function showStatus(id,msg,type){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.className=`status ${type} show`;}

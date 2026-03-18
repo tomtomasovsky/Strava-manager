@@ -18,9 +18,9 @@
   --text: #e4e4e4;
   --text2: #aaa;
   --success: #22c55e;
-  --blue: #3b82f6;
   --radius: 10px;
   --bottom-nav-h: 72px;
+  --sticky-bar-h: 68px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -37,7 +37,6 @@ body {
   background: rgba(10,10,10,0.95); backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   display: flex; align-items: center; padding: 0 16px; height: 52px;
-  padding-top: env(safe-area-inset-top, 0px);
 }
 .logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 1.25rem; letter-spacing: 2px; text-transform: uppercase; color: var(--orange); }
 .logo span { color: var(--text2); font-weight: 400; }
@@ -57,23 +56,40 @@ body {
 }
 .nav-item {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 4px; cursor: pointer; transition: opacity 0.15s;
-  background: none; border: none; padding: 8px 4px;
-  color: var(--muted); font-family: 'Barlow', sans-serif;
-  -webkit-tap-highlight-color: transparent;
+  gap: 4px; cursor: pointer; background: none; border: none; padding: 8px 4px;
+  color: var(--muted); font-family: 'Barlow', sans-serif; transition: color 0.15s;
 }
 .nav-item:active { opacity: 0.7; }
 .nav-item.active { color: var(--orange); }
-.nav-item .ni-icon { font-size: 1.6rem; line-height: 1; }
-.nav-item .ni-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.ni-icon { font-size: 1.6rem; line-height: 1; }
+.ni-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── STICKY SAVE BAR ── */
+.sticky-bar {
+  position: fixed; bottom: calc(var(--bottom-nav-h) + var(--safe-bottom)); left: 0; right: 0;
+  z-index: 99; background: rgba(15,15,15,0.97); backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+  display: none; align-items: center; gap: 10px;
+}
+.sticky-bar.show { display: flex; }
+.sticky-bar .sb-name { flex: 1; font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; color: var(--orange); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── PULL TO REFRESH ── */
+.ptr-indicator {
+  text-align: center; padding: 0; height: 0; overflow: hidden;
+  transition: height 0.2s, padding 0.2s;
+  color: var(--muted); font-size: 0.82rem;
+}
+.ptr-indicator.show { height: 40px; padding: 10px; }
 
 /* ── PAGES ── */
 .page { display: none; }
 .page.active { display: block; }
-.container { max-width: 680px; margin: 0 auto; padding: 20px 14px 20px; }
+.container { max-width: 680px; margin: 0 auto; padding: 16px 14px 20px; }
 
 /* ── CARDS ── */
-.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 12px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
 .card-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text2); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
 .card-title .accent { color: var(--orange); }
 
@@ -99,8 +115,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   border: none; border-radius: 10px; padding: 12px 18px;
   font-family: 'Barlow', sans-serif; font-size: 0.92rem; font-weight: 600;
-  cursor: pointer; transition: opacity 0.15s, transform 0.1s; white-space: nowrap;
-  min-height: 44px;
+  cursor: pointer; transition: opacity 0.15s, transform 0.1s; white-space: nowrap; min-height: 44px;
 }
 .btn:active { opacity: 0.75; transform: scale(0.98); }
 .btn:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -109,8 +124,8 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 .btn-success { background: var(--success); color: white; }
 .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
 .btn-sm { padding: 8px 14px; font-size: 0.82rem; min-height: 36px; }
-.btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .btn-full { width: 100%; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
 /* ── STATUS ── */
 .status { padding: 10px 14px; border-radius: 8px; font-size: 0.86rem; line-height: 1.5; margin-top: 10px; display: none; }
@@ -127,17 +142,11 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 .act-item {
   background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 14px; display: flex; align-items: center; gap: 12px;
-  cursor: pointer; transition: border-color 0.18s, background 0.18s; position: relative;
-  min-height: 72px;
+  cursor: pointer; transition: border-color 0.18s, background 0.18s; position: relative; min-height: 72px;
 }
 .act-item.selected { border-color: var(--orange); background: rgba(252,76,2,0.05); }
 .act-item.done { opacity: 0.4; }
-.act-item.done::after {
-  content: '✓'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-  background: rgba(34,197,94,0.2); color: var(--success);
-  border-radius: 50%; width: 24px; height: 24px;
-  display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;
-}
+.act-item.done::after { content: '✓'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: rgba(34,197,94,0.2); color: var(--success); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
 .act-emoji { font-size: 1.8rem; flex-shrink: 0; }
 .act-info { flex: 1; min-width: 0; }
 .act-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
@@ -154,7 +163,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 .ct-num.dim { color: var(--muted); font-size: 0.85rem; font-family: 'Barlow', sans-serif; }
 
 /* ── EDIT PANEL ── */
-.edit-panel { background: var(--card); border: 1px solid var(--orange); border-radius: var(--radius); padding: 18px; margin-top: 12px; display: none; }
+.edit-panel { background: var(--card); border: 1px solid var(--orange); border-radius: var(--radius); padding: 16px; margin-top: 12px; display: none; padding-bottom: calc(var(--sticky-bar-h) + 8px); }
 .edit-panel.show { display: block; }
 
 .name-preview { background: var(--surface); border: 1px dashed rgba(252,76,2,0.5); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
@@ -186,7 +195,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 .trans-divider::before, .trans-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
 /* ── PHOTOS ── */
-.photo-zone { border: 2px dashed var(--border2); border-radius: 8px; padding: 18px; text-align: center; cursor: pointer; transition: border-color 0.2s; margin-bottom: 12px; min-height: 70px; display: flex; align-items: center; justify-content: center; }
+.photo-zone { border: 2px dashed var(--border2); border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; transition: border-color 0.2s; margin-bottom: 12px; min-height: 60px; display: flex; align-items: center; justify-content: center; }
 .photo-zone.dragover { border-color: var(--orange); background: rgba(252,76,2,0.04); }
 .photo-zone p { font-size: 0.88rem; color: var(--text2); }
 .photo-zone p span { color: var(--orange); font-weight: 600; }
@@ -227,11 +236,9 @@ input[type=file] { display: none; }
 .stats-period { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
 .period-btn { padding: 8px 18px; font-size: 0.85rem; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; margin-bottom: -1px; background: none; border-top: none; border-left: none; border-right: none; font-family: 'Barlow', sans-serif; min-height: 44px; }
 .period-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
-
 .month-selector { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
 .month-selector button { background: var(--card2); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 1.1rem; min-height: 44px; min-width: 44px; }
 .month-label { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text); flex: 1; text-align: center; }
-
 .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; }
 .sc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .sc-emoji { font-size: 1.3rem; }
@@ -244,29 +251,25 @@ input[type=file] { display: none; }
 .sr-compare { font-size: 0.75rem; color: var(--muted); font-family: 'Barlow', sans-serif; }
 .sr-compare.up { color: var(--success); }
 .sr-compare.down { color: #f87171; }
-
-/* Bar chart */
 .bar-chart { margin-top: 8px; }
 .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .bar-year { font-size: 0.7rem; color: var(--muted); width: 32px; text-align: right; flex-shrink: 0; }
-.bar-track { flex: 1; background: var(--border); border-radius: 4px; height: 20px; overflow: hidden; position: relative; }
+.bar-track { flex: 1; background: var(--border); border-radius: 4px; height: 20px; overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; display: flex; align-items: center; padding: 0 6px; }
 .bar-fill.this-year { background: var(--orange); }
 .bar-fill.last-year { background: #444; }
 .bar-val { font-size: 0.7rem; font-weight: 700; color: white; white-space: nowrap; }
-
-/* YTD section */
 .ytd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
 .ytd-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
 .ytd-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
 .ytd-val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--text); }
-.ytd-val .ytd-unit { font-size: 0.75rem; color: var(--muted); font-family: 'Barlow', sans-serif; font-weight: 400; margin-left: 2px; }
+.ytd-unit { font-size: 0.75rem; color: var(--muted); font-family: 'Barlow', sans-serif; font-weight: 400; margin-left: 2px; }
 .ytd-diff { font-size: 0.75rem; margin-top: 2px; }
 .ytd-diff.up { color: var(--success); }
 .ytd-diff.down { color: #f87171; }
 .ytd-diff.neutral { color: var(--muted); }
 
-/* Setup */
+/* ── SETTINGS ── */
 .setup-steps { list-style: none; margin-bottom: 16px; }
 .setup-steps li { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; font-size: 0.88rem; color: #999; line-height: 1.6; }
 .setup-steps .sn { background: var(--orange); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
@@ -276,8 +279,18 @@ input[type=file] { display: none; }
 .conn-badge.show { display: flex; }
 .conn-badge .cdot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
 
+.default-names { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.default-name-row { display: flex; align-items: center; gap: 10px; }
+.default-name-row .dn-emoji { font-size: 1.3rem; flex-shrink: 0; width: 32px; text-align: center; }
+.default-name-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-family: 'Barlow', sans-serif; font-size: 0.92rem; outline: none; }
+.default-name-row input:focus { border-color: var(--orange); }
+.default-name-row input::placeholder { color: var(--muted); }
+
 .page-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px; }
 .page-sub { font-size: 0.8rem; color: var(--text2); margin-bottom: 16px; }
+
+/* ── FOOTER ── */
+.footer { text-align: center; padding: 20px; font-size: 0.72rem; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -285,10 +298,13 @@ input[type=file] { display: none; }
 <div class="header">
   <div class="logo">Strava <span>Manager</span></div>
   <div class="header-right">
-    <span class="version">v5.1</span>
+    <span class="version">v6.0</span>
     <div class="conn-dot" id="hdr-dot"></div>
   </div>
 </div>
+
+<!-- Pull to refresh indicator -->
+<div class="ptr-indicator" id="ptr-indicator">↑ Release to refresh</div>
 
 <!-- ══ ACTIVITIES ══ -->
 <div class="page active" id="page-activities">
@@ -296,7 +312,7 @@ input[type=file] { display: none; }
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
     <div>
       <div class="page-title">Activities</div>
-      <div class="page-sub">Tap an activity to edit it</div>
+      <div class="page-sub" style="margin-bottom:0">Tap an activity to edit it</div>
     </div>
     <button class="btn btn-secondary btn-sm" onclick="loadAll()">⟳ Refresh</button>
   </div>
@@ -332,13 +348,13 @@ input[type=file] { display: none; }
         <span class="num-emoji" id="ep-emoji-prefix">🚴‍♂️</span>
         <span class="num-hash">#</span>
         <input type="number" id="ep-num" min="1" max="999" oninput="updateEpPreview()">
-        <span class="num-year">/26</span>
+        <span class="num-year" id="ep-year-display">/26</span>
       </div>
     </div>
 
     <div class="sec-label">Title (after number)</div>
     <div class="field" style="margin-bottom:6px">
-      <input type="text" id="ep-subtitle" placeholder="e.g. Lunch break ride, Makama…" oninput="updateEpPreview()">
+      <input type="text" id="ep-subtitle" placeholder="e.g. Lunch break ride…" oninput="updateEpPreview()">
     </div>
     <div class="name-preview" style="margin-bottom:12px">
       <div class="np-label">Final name on Strava</div>
@@ -361,14 +377,14 @@ input[type=file] { display: none; }
     </div>
 
     <div id="ai-section" style="display:none">
-      <div class="sec-label">AI title suggestions (Gemini)</div>
+      <div class="sec-label">AI title suggestions</div>
       <div class="ai-box">
         <div class="ai-box-header">
           <span class="ai-box-title">✨ Suggestions in your style</span>
           <button class="btn btn-secondary btn-sm" id="ai-gen-btn" onclick="generateAISuggestions()">Generate</button>
         </div>
         <div id="ai-suggestions-container" style="font-size:0.82rem;color:var(--muted)">
-          Tap Generate. If you wrote a description above, AI will use it.
+          Tap Generate. If you wrote a description, AI will use it.
         </div>
       </div>
     </div>
@@ -380,11 +396,6 @@ input[type=file] { display: none; }
     </div>
     <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotoSelect(event)">
     <div class="upload-progress" id="upload-progress"><div class="progress-bar" id="progress-bar"></div></div>
-
-    <div class="btn-row" style="margin-top:14px">
-      <button class="btn btn-success" style="flex:1" id="ep-save-btn" onclick="saveActivity()">💾 Save to Strava</button>
-      <button class="btn btn-ghost" onclick="closeEditPanel()">Cancel</button>
-    </div>
     <div class="status" id="ep-status"></div>
   </div>
 </div>
@@ -394,20 +405,16 @@ input[type=file] { display: none; }
 <div class="page" id="page-stats">
 <div class="container">
   <div class="page-title">Statistics</div>
-  <div class="page-sub" id="stats-sub">This year</div>
-
   <div class="stats-period">
     <button class="period-btn active" onclick="switchPeriod('month',this)">Monthly</button>
     <button class="period-btn" onclick="switchPeriod('year',this)">Year</button>
     <button class="period-btn" onclick="switchPeriod('ytd',this)">YTD</button>
   </div>
-
   <div class="month-selector" id="month-selector">
     <button onclick="changeMonth(-1)">‹</button>
     <div class="month-label" id="month-label">March 2026</div>
     <button onclick="changeMonth(1)">›</button>
   </div>
-
   <div id="stats-content"><div class="empty-state"><div class="ei">📊</div><p>Load activities first.</p></div></div>
 </div>
 </div>
@@ -417,7 +424,6 @@ input[type=file] { display: none; }
 <div class="container">
   <div class="page-title">New Activity</div>
   <div class="page-sub">Manual entry — not from Garmin</div>
-
   <div class="card">
     <div class="sec-label">Activity type</div>
     <div class="sport-select" id="man-sport-select">
@@ -462,7 +468,7 @@ input[type=file] { display: none; }
       <li><span class="sn">2</span><span>Copy <strong>Client ID</strong> and <strong>Client Secret</strong></span></li>
       <li><span class="sn">3</span><span>Tap Connect — one-time approval on Strava</span></li>
     </ul>
-    <div class="security-note">🔒 Tokens stored locally in your browser only. Never sent anywhere.</div>
+    <div class="security-note">🔒 Tokens stored locally in your browser only.</div>
     <div class="grid2" style="margin-bottom:10px">
       <div class="field"><label>Client ID</label><input type="text" id="s-cid" placeholder="123456" inputmode="numeric"></div>
       <div class="field"><label>Client Secret</label><input type="password" id="s-cs" placeholder="abc123..."></div>
@@ -477,7 +483,7 @@ input[type=file] { display: none; }
 
   <div class="card">
     <div class="card-title"><span class="accent">02</span> Gemini API — AI title suggestions</div>
-    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:12px;line-height:1.6">Get a free key at <a href="https://aistudio.google.com" target="_blank" style="color:var(--orange)">aistudio.google.com</a>. Used only for cycling title suggestions.</p>
+    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:12px;line-height:1.6">Free key at <a href="https://aistudio.google.com" target="_blank" style="color:var(--orange)">aistudio.google.com</a>. Used for cycling, running and hiking title suggestions.</p>
     <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px">
       <div class="field" style="flex:1"><label>Gemini API Key</label><input type="password" id="s-gemini" placeholder="AIza..."></div>
       <button class="btn btn-secondary" onclick="saveGeminiKey()">Save</button>
@@ -486,47 +492,64 @@ input[type=file] { display: none; }
   </div>
 
   <div class="card">
-    <div class="card-title"><span class="accent">03</span> How it works</div>
-    <div style="font-size:0.85rem;color:var(--text2);line-height:1.9">
-      <p>1. Garmin uploads activity → appears in the list.</p>
-      <p>2. Tap activity → select type, adjust number if needed.</p>
-      <p>3. For cycling: AI suggests titles in your style.</p>
-      <p>4. Write description in Slovak → Google translates to English.</p>
-      <p>5. Add photos → Save. ✓</p>
-      <p style="margin-top:8px;color:var(--muted)">Tip: If you write a description first, the AI will use it to suggest a matching title.</p>
+    <div class="card-title"><span class="accent">03</span> Numbering format</div>
+    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:12px;line-height:1.6">Year suffix shown after the activity number. Examples: <code style="color:var(--orange)">/26</code>, <code style="color:var(--orange)">/2026</code>, <code style="color:var(--orange)">/2k26</code></p>
+    <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px">
+      <div class="field" style="flex:1"><label>Year suffix</label><input type="text" id="s-year-suffix" placeholder="/26" maxlength="10"></div>
+      <button class="btn btn-secondary" onclick="saveYearSuffix()">Save</button>
     </div>
+    <div style="font-size:0.8rem;color:var(--muted)">Preview: 🚴‍♂️ #7<span id="year-suffix-preview">/26</span></div>
+    <div class="status" id="s-suffix-status"></div>
   </div>
+
+  <div class="card">
+    <div class="card-title"><span class="accent">04</span> Default activity titles</div>
+    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:12px;line-height:1.6">Pre-filled title for each activity type. Leave empty to fill manually or use AI.</p>
+    <div class="default-names">
+      <div class="default-name-row"><span class="dn-emoji">🚴‍♂️</span><input type="text" id="dn-Ride" placeholder="e.g. Morning ride (or leave empty for AI)"></div>
+      <div class="default-name-row"><span class="dn-emoji">🏃</span><input type="text" id="dn-Run" placeholder="e.g. Evening run (or leave empty for AI)"></div>
+      <div class="default-name-row"><span class="dn-emoji">🏋️</span><input type="text" id="dn-WeightTraining" placeholder="e.g. Makama"></div>
+      <div class="default-name-row"><span class="dn-emoji">🥾</span><input type="text" id="dn-Hike" placeholder="e.g. Trail day (or leave empty for AI)"></div>
+    </div>
+    <button class="btn btn-secondary" onclick="saveDefaultNames()">Save defaults</button>
+    <div class="status" id="s-defaults-status"></div>
+  </div>
+
+  <div class="footer">© <span id="footer-year"></span> Tomas Pavlik</div>
 </div>
+</div>
+
+<!-- ══ STICKY SAVE BAR ── -->
+<div class="sticky-bar" id="sticky-bar">
+  <div class="sb-name" id="sb-preview">🚴‍♂️ #1/26</div>
+  <button class="btn btn-ghost btn-sm" onclick="closeEditPanel()">Cancel</button>
+  <button class="btn btn-success btn-sm" id="sticky-save-btn" onclick="saveActivity()">💾 Save</button>
 </div>
 
 <!-- ══ BOTTOM NAV ══ -->
 <div class="bottom-nav">
   <button class="nav-item active" onclick="showPage('activities',this)" id="nav-activities">
-    <span class="ni-icon">🏃</span>
-    <span class="ni-label">Activities</span>
+    <span class="ni-icon">🏃</span><span class="ni-label">Activities</span>
   </button>
   <button class="nav-item" onclick="showPage('stats',this)" id="nav-stats">
-    <span class="ni-icon">📊</span>
-    <span class="ni-label">Stats</span>
+    <span class="ni-icon">📊</span><span class="ni-label">Stats</span>
   </button>
   <button class="nav-item" onclick="showPage('manual',this)" id="nav-manual">
-    <span class="ni-icon">➕</span>
-    <span class="ni-label">New</span>
+    <span class="ni-icon">➕</span><span class="ni-label">New</span>
   </button>
   <button class="nav-item" onclick="showPage('settings',this)" id="nav-settings">
-    <span class="ni-icon">⚙️</span>
-    <span class="ni-label">Settings</span>
+    <span class="ni-icon">⚙️</span><span class="ni-label">Settings</span>
   </button>
 </div>
 
 <script>
 const REDIRECT_URI = location.href.split('?')[0].split('#')[0];
-const YEAR_SUFFIX = String(new Date().getFullYear()).slice(-2);
+const CUR_YEAR = new Date().getFullYear();
+const AUTO_SUFFIX = '/'+String(CUR_YEAR).slice(-2);
 const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 const SPORT_MAP = {
-  Ride:'Ride', VirtualRide:'Ride', EBikeRide:'Ride',
-  MountainBikeRide:'Ride', EMountainBikeRide:'Ride', GravelRide:'Ride',
+  Ride:'Ride', VirtualRide:'Ride', EBikeRide:'Ride', MountainBikeRide:'Ride', EMountainBikeRide:'Ride', GravelRide:'Ride',
   Run:'Run', VirtualRun:'Run', TrailRun:'Run',
   WeightTraining:'WeightTraining', Workout:'WeightTraining', CrossFit:'WeightTraining',
   Hike:'Hike', Walk:'Hike',
@@ -550,35 +573,72 @@ let S = {
   athleteName: ls('strava_athlete')||'',
   counters:    JSON.parse(ls('strava_counters')||'{}'),
   geminiKey:   ls('gemini_key')||'',
+  yearSuffix:  ls('year_suffix')||AUTO_SUFFIX,
+  defaultNames:JSON.parse(ls('default_names')||'{}'),
   editActivity:null, editSport:'Ride', editEmoji:'🚴‍♂️',
   photos:[], manSport:'Ride', manEmoji:'🚴‍♂️',
-  statsPeriod:'month', statsMonth:new Date().getMonth(), statsYear:new Date().getFullYear(),
+  statsPeriod:'month', statsMonth:new Date().getMonth(), statsYear:CUR_YEAR,
   allYearActs:[], lastYearActs:[],
 };
 
 window.onload = async () => {
+  // Footer year
+  document.getElementById('footer-year').textContent = CUR_YEAR;
+
+  // Pre-fill settings
   if(S.clientId) document.getElementById('s-cid').value=S.clientId;
   if(S.clientSecret) document.getElementById('s-cs').value=S.clientSecret;
   if(S.geminiKey) document.getElementById('s-gemini').value=S.geminiKey;
+  document.getElementById('s-year-suffix').value=S.yearSuffix;
+  document.getElementById('year-suffix-preview').textContent=S.yearSuffix;
+  document.getElementById('ep-year-display').textContent=S.yearSuffix;
+
+  // Pre-fill default names
+  Object.keys(SPORT_CONFIG).forEach(t=>{
+    const el=document.getElementById('dn-'+t);
+    if(el && S.defaultNames[t]) el.value=S.defaultNames[t];
+  });
+
   document.getElementById('man-date').value=new Date().toISOString().slice(0,10);
+
   const p=new URLSearchParams(location.search);
   if(p.get('code')){ await handleOAuthCallback(p.get('code')); history.replaceState({},'',REDIRECT_URI); }
   if(S.accessToken){ updateConnectedUI(); await loadAll(); }
   updateManPreview();
+  initPullToRefresh();
 };
 
+// ── PULL TO REFRESH ──────────────────────────────────────────────────────
+function initPullToRefresh(){
+  let startY=0, pulling=false;
+  document.addEventListener('touchstart',e=>{if(window.scrollY===0) startY=e.touches[0].clientY;},{ passive:true });
+  document.addEventListener('touchmove',e=>{
+    if(!startY) return;
+    const dy=e.touches[0].clientY-startY;
+    if(dy>60 && window.scrollY===0){
+      pulling=true;
+      document.getElementById('ptr-indicator').classList.add('show');
+    }
+  },{ passive:true });
+  document.addEventListener('touchend',()=>{
+    if(pulling){ pulling=false; document.getElementById('ptr-indicator').classList.remove('show'); loadAll(); }
+    startY=0;
+  });
+}
+
+// ── PAGES ────────────────────────────────────────────────────────────────
 function showPage(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   btn.classList.add('active');
   if(name==='stats') renderStats();
+  if(name!=='activities') closeEditPanel();
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────────
 function startStravaAuth(){
-  const cid=document.getElementById('s-cid').value.trim();
-  const cs=document.getElementById('s-cs').value.trim();
+  const cid=document.getElementById('s-cid').value.trim(), cs=document.getElementById('s-cs').value.trim();
   if(!cid||!cs){showStatus('s-strava-status','Enter Client ID and Secret.','error');return;}
   lss('strava_cid',cid); lss('strava_cs',cs); S.clientId=cid; S.clientSecret=cs;
   location.href=`https://www.strava.com/oauth/authorize?client_id=${cid}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&approval_prompt=force&scope=activity:read_all,activity:write`;
@@ -593,7 +653,7 @@ async function handleOAuthCallback(code){
     S.athleteName=(d.athlete?.firstname||'')+' '+(d.athlete?.lastname||'');
     lss('strava_at',d.access_token); lss('strava_rt',d.refresh_token); lss('strava_exp',d.expires_at); lss('strava_athlete',S.athleteName);
     updateConnectedUI(); showStatus('s-strava-status','Connected! 🎉','success');
-    showPage('activities', document.getElementById('nav-activities'));
+    showPage('activities',document.getElementById('nav-activities'));
     await loadAll();
   } else { showStatus('s-strava-status','Error: '+(d.message||'Unknown'),'error'); }
 }
@@ -625,25 +685,44 @@ async function ensureToken(){
   return false;
 }
 
+// ── SETTINGS SAVES ────────────────────────────────────────────────────────
 function saveGeminiKey(){
   const k=document.getElementById('s-gemini').value.trim();
   if(!k){showStatus('s-gemini-status','Enter API key.','error');return;}
   lss('gemini_key',k); S.geminiKey=k; showStatus('s-gemini-status','Key saved ✓','success');
 }
 
+function saveYearSuffix(){
+  const v=document.getElementById('s-year-suffix').value.trim()||AUTO_SUFFIX;
+  lss('year_suffix',v); S.yearSuffix=v;
+  document.getElementById('year-suffix-preview').textContent=v;
+  document.getElementById('ep-year-display').textContent=v;
+  updateEpPreview(); updateManPreview();
+  showStatus('s-suffix-status','Saved ✓','success');
+}
+
+function saveDefaultNames(){
+  const names={};
+  Object.keys(SPORT_CONFIG).forEach(t=>{
+    const el=document.getElementById('dn-'+t);
+    if(el) names[t]=el.value.trim();
+  });
+  lss('default_names',JSON.stringify(names)); S.defaultNames=names;
+  showStatus('s-defaults-status','Saved ✓','success');
+}
+
 // ── LOAD ALL ──────────────────────────────────────────────────────────────
 async function loadAll(){
-  await Promise.all([loadYearActivities(), loadLastYearActivities()]);
+  await Promise.all([loadYearActivities(),loadLastYearActivities()]);
   computeCounters();
   loadRecentActivities();
 }
 
-async function fetchActivitiesInRange(after, before){
+async function fetchActivitiesInRange(after,before){
   if(!S.accessToken||!await ensureToken()) return [];
   let all=[],page=1,done=false;
   while(!done){
-    const url=`https://www.strava.com/api/v3/athlete/activities?after=${after}&before=${before}&per_page=100&page=${page}`;
-    const r=await fetch(url,{headers:{Authorization:'Bearer '+S.accessToken}});
+    const r=await fetch(`https://www.strava.com/api/v3/athlete/activities?after=${after}&before=${before}&per_page=100&page=${page}`,{headers:{Authorization:'Bearer '+S.accessToken}});
     const acts=await r.json();
     if(!Array.isArray(acts)||!acts.length){done=true;break;}
     all=all.concat(acts); page++; if(acts.length<100) done=true;
@@ -652,19 +731,18 @@ async function fetchActivitiesInRange(after, before){
 }
 
 async function loadYearActivities(){
-  const yearStart=Math.floor(new Date(`${new Date().getFullYear()}-01-01`).getTime()/1000);
-  const yearEnd=Math.floor(new Date(`${new Date().getFullYear()+1}-01-01`).getTime()/1000);
-  const acts=await fetchActivitiesInRange(yearStart,yearEnd);
+  const s=Math.floor(new Date(`${CUR_YEAR}-01-01`).getTime()/1000);
+  const e=Math.floor(new Date(`${CUR_YEAR+1}-01-01`).getTime()/1000);
+  const acts=await fetchActivitiesInRange(s,e);
   acts.sort((a,b)=>new Date(b.start_date_local)-new Date(a.start_date_local));
   S.allYearActs=acts;
 }
 
 async function loadLastYearActivities(){
-  const ly=new Date().getFullYear()-1;
-  const start=Math.floor(new Date(`${ly}-01-01`).getTime()/1000);
-  const end=Math.floor(new Date(`${ly+1}-01-01`).getTime()/1000);
-  const acts=await fetchActivitiesInRange(start,end);
-  S.lastYearActs=acts;
+  const ly=CUR_YEAR-1;
+  const s=Math.floor(new Date(`${ly}-01-01`).getTime()/1000);
+  const e=Math.floor(new Date(`${ly+1}-01-01`).getTime()/1000);
+  S.lastYearActs=await fetchActivitiesInRange(s,e);
 }
 
 function computeCounters(){
@@ -674,7 +752,7 @@ function computeCounters(){
     if(type&&type in counts){
       const emoji=SPORT_CONFIG[type]?.emoji||'';
       const esc=emoji.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      const m=(a.name||'').match(new RegExp('(?:'+esc+'\\s*)?#?(\\d+)\\/'+YEAR_SUFFIX));
+      const m=(a.name||'').match(new RegExp('(?:'+esc+'\\s*)?#?(\\d+)\\/'));
       if(m){const n=parseInt(m[1]);if(n>counts[type])counts[type]=n;}
     }
   }
@@ -710,6 +788,7 @@ function loadRecentActivities(){
   container.innerHTML='<div class="act-list">'+html+'</div>';
 }
 
+// ── SELECT ACTIVITY ───────────────────────────────────────────────────────
 function selectActivity(id){
   document.querySelectorAll('.act-item').forEach(el=>el.classList.remove('selected'));
   document.getElementById('act-'+id)?.classList.add('selected');
@@ -719,20 +798,39 @@ function selectActivity(id){
   S.editSport=SPORT_MAP[raw]||'Ride';
   S.editEmoji=SPORT_CONFIG[S.editSport].emoji;
   S.photos=[];
+
+  // Sync sport selector
   document.querySelectorAll('#ep-sport-select .sport-opt').forEach(el=>{
     const sp=el.getAttribute('onclick').match(/'(\w+)'/)?.[1];
     el.classList.toggle('active',sp===S.editSport);
   });
+
   document.getElementById('ep-orig-name').textContent='← '+a.name;
   document.getElementById('ep-emoji-prefix').textContent=S.editEmoji;
-  document.getElementById('ep-num').value=(S.counters[S.editSport]||0)+1;
-  document.getElementById('ep-subtitle').value='';
+  document.getElementById('ep-year-display').textContent=S.yearSuffix;
+
+  // Try to parse existing name: detect if already has our format
+  const esc=S.editEmoji.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const existingMatch=a.name.match(new RegExp('(?:'+esc+'\\s*)?#?(\\d+)\\/\\S*\\s*(.*)'));
+  if(existingMatch){
+    // Already formatted — load existing number and subtitle
+    document.getElementById('ep-num').value=existingMatch[1];
+    document.getElementById('ep-subtitle').value=existingMatch[2]?.trim()||'';
+  } else {
+    // Not yet formatted — suggest next number and default name
+    document.getElementById('ep-num').value=(S.counters[S.editSport]||0)+1;
+    document.getElementById('ep-subtitle').value=S.defaultNames[S.editSport]||'';
+  }
+
+  // Load existing description if available
+  document.getElementById('ep-desc-en').value=a.description||'';
   document.getElementById('ep-desc-sk').value='';
-  document.getElementById('ep-desc-en').value='';
   document.getElementById('trans-status').textContent='';
   document.getElementById('ai-suggestions-container').innerHTML='<span style="font-size:0.82rem;color:var(--muted)">Tap Generate. If you wrote a description, AI will use it.</span>';
-  document.getElementById('ai-section').style.display=S.editSport==='Ride'?'block':'none';
+  document.getElementById('ai-section').style.display=(S.editSport==='Ride'||S.editSport==='Run'||S.editSport==='Hike')?'block':'none';
+
   renderPhotoGrid(); updateEpPreview();
+  document.getElementById('sticky-bar').classList.add('show');
   const panel=document.getElementById('edit-panel');
   panel.classList.add('show');
   setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
@@ -743,18 +841,22 @@ function epSelectSport(el,sport,emoji){
   el.classList.add('active'); S.editSport=sport; S.editEmoji=emoji;
   document.getElementById('ep-emoji-prefix').textContent=emoji;
   document.getElementById('ep-num').value=(S.counters[sport]||0)+1;
-  document.getElementById('ai-section').style.display=sport==='Ride'?'block':'none';
+  document.getElementById('ep-subtitle').value=S.defaultNames[sport]||'';
+  document.getElementById('ai-section').style.display=(sport==='Ride'||sport==='Run'||sport==='Hike')?'block':'none';
   updateEpPreview();
 }
 
 function updateEpPreview(){
   const num=document.getElementById('ep-num')?.value||'1';
   const sub=document.getElementById('ep-subtitle')?.value.trim()||'';
-  document.getElementById('ep-new-name').textContent=`${S.editEmoji} #${num}/${YEAR_SUFFIX}${sub?' '+sub:''}`;
+  const name=`${S.editEmoji} #${num}${S.yearSuffix}${sub?' '+sub:''}`;
+  document.getElementById('ep-new-name').textContent=name;
+  document.getElementById('sb-preview').textContent=name;
 }
 
 function closeEditPanel(){
   document.getElementById('edit-panel').classList.remove('show');
+  document.getElementById('sticky-bar').classList.remove('show');
   document.querySelectorAll('.act-item').forEach(el=>el.classList.remove('selected'));
   S.editActivity=null; S.photos=[];
 }
@@ -768,20 +870,23 @@ async function generateAISuggestions(){
   const container=document.getElementById('ai-suggestions-container');
   container.innerHTML='<span style="font-size:0.82rem;color:var(--muted)">⟳ Generating…</span>';
 
-  const rideNames=S.allYearActs.filter(x=>SPORT_MAP[x.sport_type||x.type]==='Ride'&&x.name&&!/afternoon|morning ride|evening ride|lunch ride/i.test(x.name)).slice(0,20).map(x=>x.name);
+  // Get historical names for this sport type
+  const histNames=S.allYearActs
+    .filter(x=>SPORT_MAP[x.sport_type||x.type]===S.editSport && x.name && !/afternoon|morning ride|evening ride|lunch ride|morning run|afternoon run|workout/i.test(x.name))
+    .slice(0,20).map(x=>x.name);
+
   const dist=a.distance?(a.distance/1000).toFixed(1)+'km':'';
   const dur=a.moving_time?Math.round(a.moving_time/60)+'min':'';
   const elev=a.total_elevation_gain?Math.round(a.total_elevation_gain)+'m elevation':'';
   const hour=new Date(a.start_date_local).getHours();
   const tod=hour<10?'morning':hour<13?'midday':hour<17?'afternoon':'evening';
-
-  // Use Slovak description if available
+  const sportLabel=SPORT_CONFIG[S.editSport]?.label||S.editSport;
   const skDesc=document.getElementById('ep-desc-sk').value.trim();
-  const descContext=skDesc?`\n\nThe athlete also wrote this description (in Slovak): "${skDesc}". Use this to make the title more specific and relevant.`:'';
+  const descContext=skDesc?`\n\nThe athlete wrote this description (in Slovak): "${skDesc}". Use this to make the title more specific.`:'';
 
-  const prompt=`You help a cyclist name Strava activities. Their recent activity names for style reference: ${rideNames.length?rideNames.join(', '):'(none yet)'}.
+  const prompt=`You help an athlete name their Strava ${sportLabel} activities. Their recent ${sportLabel} names for style reference: ${histNames.length?histNames.join(', '):'(none yet)'}.
 
-Activity details: ${dist}${dur?' / '+dur:''}${elev?' / '+elev:''}, ${tod}.${descContext}
+Activity: ${dist}${dur?' / '+dur:''}${elev?' / '+elev:''}, ${tod}.${descContext}
 
 Generate exactly 3 short creative subtitle suggestions (NOT including the number prefix like #7/26). English, energetic, personal, max 4 words each. Respond ONLY with a JSON array of 3 strings.`;
 
@@ -791,7 +896,7 @@ Generate exactly 3 short creative subtitle suggestions (NOT including the number
     const text=d.candidates?.[0]?.content?.parts?.[0]?.text||'[]';
     const suggestions=JSON.parse(text.replace(/```json|```/g,'').trim());
     if(Array.isArray(suggestions)&&suggestions.length){
-      container.innerHTML=suggestions.map((s,i)=>`<div class="ai-suggestion" onclick="applyAI(this,'${s.replace(/'/g,"\\'")}')"><div class="as-label">Suggestion ${i+1}</div><div class="as-val">${S.editEmoji} #${document.getElementById('ep-num').value}/${YEAR_SUFFIX} ${s}</div></div>`).join('');
+      container.innerHTML=suggestions.map((s,i)=>`<div class="ai-suggestion" onclick="applyAI(this,'${s.replace(/'/g,"\\'")}')"><div class="as-label">Suggestion ${i+1}</div><div class="as-val">${S.editEmoji} #${document.getElementById('ep-num').value}${S.yearSuffix} ${s}</div></div>`).join('');
     } else { container.innerHTML='<span style="font-size:0.82rem;color:var(--muted)">⚠ Try again.</span>'; }
   }catch(e){ container.innerHTML=`<span style="font-size:0.82rem;color:#fca5a5">⚠ ${e.message}</span>`; }
   btn.disabled=false; btn.innerHTML='Generate';
@@ -813,8 +918,7 @@ async function googleTranslate(text){
 async function translateDesc(){
   const sk=document.getElementById('ep-desc-sk').value.trim();
   if(!sk){showStatus('ep-status','Write a Slovak description first.','error');return;}
-  const btn=document.getElementById('trans-btn');
-  btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  const btn=document.getElementById('trans-btn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
   document.getElementById('trans-status').textContent='⟳';
   try{document.getElementById('ep-desc-en').value=await googleTranslate(sk);document.getElementById('trans-status').textContent='✓';}
   catch(e){document.getElementById('trans-status').textContent='⚠';}
@@ -841,15 +945,19 @@ function renderPhotoGrid(){document.getElementById('photo-grid').innerHTML=S.pho
 async function saveActivity(){
   if(!S.editActivity||!await ensureToken()){showStatus('ep-status','Token error.','error');return;}
   const btn=document.getElementById('ep-save-btn');
-  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Saving…';
+  const stickyBtn=document.getElementById('sticky-save-btn');
+  [btn,stickyBtn].forEach(b=>{if(b){b.disabled=true;b.innerHTML='<span class="spin"></span>';}});
+
   const num=document.getElementById('ep-num').value;
   const sub=document.getElementById('ep-subtitle').value.trim();
-  const newName=`${S.editEmoji} #${num}/${YEAR_SUFFIX}${sub?' '+sub:''}`;
+  const newName=`${S.editEmoji} #${num}${S.yearSuffix}${sub?' '+sub:''}`;
   const descEn=document.getElementById('ep-desc-en').value.trim()||document.getElementById('ep-desc-sk').value.trim();
+
   try{
     const upd=await fetch(`https://www.strava.com/api/v3/activities/${S.editActivity.id}`,{method:'PUT',headers:{Authorization:'Bearer '+S.accessToken,'Content-Type':'application/json'},body:JSON.stringify({name:newName,description:descEn,sport_type:S.editSport})});
     const updData=await upd.json();
     if(!updData.id) throw new Error(updData.message||'Update failed');
+
     if(S.photos.length){
       const prog=document.getElementById('upload-progress'),bar=document.getElementById('progress-bar');
       prog.classList.add('show');
@@ -861,28 +969,44 @@ async function saveActivity(){
       }
       bar.style.width='100%'; setTimeout(()=>{prog.classList.remove('show');bar.style.width='0%';},800);
     }
+
     const savedNum=parseInt(num);
-    if(savedNum>(S.counters[S.editSport]||0)){S.counters[S.editSport]=savedNum;lss('strava_counters',JSON.stringify(S.counters));const cEl=document.getElementById('c-'+S.editSport);if(cEl){cEl.textContent='#'+(savedNum+1);cEl.className='ct-num';}}
-    const editedIds=JSON.parse(ls('edited_ids')||'[]');editedIds.push(S.editActivity.id);lss('edited_ids',JSON.stringify(editedIds));
+    if(savedNum>(S.counters[S.editSport]||0)){
+      S.counters[S.editSport]=savedNum; lss('strava_counters',JSON.stringify(S.counters));
+      const cEl=document.getElementById('c-'+S.editSport);
+      if(cEl){cEl.textContent='#'+(savedNum+1);cEl.className='ct-num';}
+    }
+
+    const editedIds=JSON.parse(ls('edited_ids')||'[]');
+    editedIds.push(S.editActivity.id); lss('edited_ids',JSON.stringify(editedIds));
     document.getElementById('act-'+S.editActivity.id)?.classList.add('done');
-    const nameEl=document.querySelector('#act-'+S.editActivity.id+' .act-name');if(nameEl)nameEl.textContent=newName;
-    const idx=S.allYearActs.findIndex(x=>x.id===S.editActivity.id);if(idx>=0)S.allYearActs[idx].name=newName;
+    const nameEl=document.querySelector('#act-'+S.editActivity.id+' .act-name');
+    if(nameEl) nameEl.textContent=newName;
+    const idx=S.allYearActs.findIndex(x=>x.id===S.editActivity.id);
+    if(idx>=0){S.allYearActs[idx].name=newName; S.allYearActs[idx].description=descEn;}
+
     showStatus('ep-status',`✅ "${newName}" saved!`+(S.photos.length?` (+${S.photos.length} photos)`:'')+' Check Strava.','success');
     S.photos=[]; renderPhotoGrid();
   }catch(e){showStatus('ep-status','Error: '+e.message,'error');}
-  btn.disabled=false; btn.innerHTML='💾 Save to Strava';
+  [btn,stickyBtn].forEach(b=>{if(b){b.disabled=false;b.innerHTML=b===stickyBtn?'💾 Save':'💾 Save';}});
 }
 
 // ── MANUAL UPLOAD ─────────────────────────────────────────────────────────
 function manSelectSport(el,sport,emoji){document.querySelectorAll('#man-sport-select .sport-opt').forEach(b=>b.classList.remove('active'));el.classList.add('active');S.manSport=sport;S.manEmoji=emoji;updateManPreview();}
-function updateManPreview(){const n=(S.counters[S.manSport]||0)+1;const sub=document.getElementById('man-subtitle')?.value.trim()||'';document.getElementById('man-name-preview').textContent=`${S.manEmoji} #${n}/${YEAR_SUFFIX}${sub?' '+sub:''}`;}
+function updateManPreview(){
+  const n=(S.counters[S.manSport]||0)+1;
+  const sub=document.getElementById('man-subtitle')?.value.trim()||S.defaultNames[S.manSport]||'';
+  document.getElementById('man-name-preview').textContent=`${S.manEmoji} #${n}${S.yearSuffix}${sub?' '+sub:''}`;
+}
 
 async function uploadManual(){
   if(!S.accessToken||!await ensureToken()){showStatus('man-status','Connect to Strava first.','error');return;}
-  const date=document.getElementById('man-date').value,time=document.getElementById('man-time').value,dur=parseInt(document.getElementById('man-dur').value),dist=parseFloat(document.getElementById('man-dist').value)||0,sub=document.getElementById('man-subtitle').value.trim();
+  const date=document.getElementById('man-date').value,time=document.getElementById('man-time').value,dur=parseInt(document.getElementById('man-dur').value),dist=parseFloat(document.getElementById('man-dist').value)||0;
+  const sub=document.getElementById('man-subtitle').value.trim()||S.defaultNames[S.manSport]||'';
   const descEn=document.getElementById('man-desc-en').value.trim()||document.getElementById('man-desc-sk').value.trim();
   if(!date||!time||!dur){showStatus('man-status','Fill in date, time and duration.','error');return;}
-  const n=(S.counters[S.manSport]||0)+1,name=`${S.manEmoji} #${n}/${YEAR_SUFFIX}${sub?' '+sub:''}`;
+  const n=(S.counters[S.manSport]||0)+1;
+  const name=`${S.manEmoji} #${n}${S.yearSuffix}${sub?' '+sub:''}`;
   const btn=document.getElementById('man-upload-btn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Uploading…';
   try{
     const startISO=new Date(`${date}T${time}:00`).toISOString().replace('.000Z','Z');
@@ -890,8 +1014,12 @@ async function uploadManual(){
     if(dist>0)body.distance=dist*1000;
     const r=await fetch('https://www.strava.com/api/v3/activities',{method:'POST',headers:{Authorization:'Bearer '+S.accessToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
-    if(d.id){S.counters[S.manSport]=n;lss('strava_counters',JSON.stringify(S.counters));const cEl=document.getElementById('c-'+S.manSport);if(cEl){cEl.textContent='#'+(n+1);cEl.className='ct-num';}updateManPreview();showStatus('man-status',`✅ "${name}" uploaded!`,'success');['man-dur','man-dist','man-desc-sk','man-desc-en','man-subtitle'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});}
-    else{showStatus('man-status','Error: '+(d.message||JSON.stringify(d)),'error');}
+    if(d.id){
+      S.counters[S.manSport]=n; lss('strava_counters',JSON.stringify(S.counters));
+      const cEl=document.getElementById('c-'+S.manSport); if(cEl){cEl.textContent='#'+(n+1);cEl.className='ct-num';}
+      updateManPreview(); showStatus('man-status',`✅ "${name}" uploaded!`,'success');
+      ['man-dur','man-dist','man-desc-sk','man-desc-en','man-subtitle'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    } else { showStatus('man-status','Error: '+(d.message||JSON.stringify(d)),'error'); }
   }catch(e){showStatus('man-status','Error: '+e.message,'error');}
   btn.disabled=false;btn.innerHTML='⬆️ Upload to Strava';
 }
@@ -907,91 +1035,77 @@ function switchPeriod(period,btn){
 function changeMonth(dir){S.statsMonth+=dir;if(S.statsMonth<0){S.statsMonth=11;S.statsYear--;}if(S.statsMonth>11){S.statsMonth=0;S.statsYear++;}renderStats();}
 
 function aggActs(acts){
-  const agg={};
-  Object.keys(SPORT_CONFIG).forEach(t=>{agg[t]={count:0,dist:0,time:0,elev:0};});
+  const agg={};Object.keys(SPORT_CONFIG).forEach(t=>{agg[t]={count:0,dist:0,time:0,elev:0};});
   for(const a of acts){const type=SPORT_MAP[a.sport_type||a.type];if(type&&type in agg){agg[type].count++;agg[type].dist+=a.distance||0;agg[type].time+=a.moving_time||0;agg[type].elev+=a.total_elevation_gain||0;}}
   return agg;
 }
-
-function fmtTime(secs){const h=Math.floor(secs/3600),m=Math.round((secs%3600)/60);return h>0?`${h}h ${m}min`:`${m}min`;}
+function fmtTime(s){const h=Math.floor(s/3600),m=Math.round((s%3600)/60);return h>0?`${h}h ${m}min`:`${m}min`;}
 function fmtKm(m){return (m/1000).toFixed(1);}
-function diffArrow(cur,prev){if(!prev) return '';const pct=Math.round(((cur-prev)/prev)*100);if(pct>0) return `<span class="sr-compare up">▲ ${pct}% vs last year</span>`;if(pct<0) return `<span class="sr-compare down">▼ ${Math.abs(pct)}% vs last year</span>`;return `<span class="sr-compare">= same as last year</span>`;}
+function diffArrow(cur,prev){if(!prev)return '';const pct=Math.round(((cur-prev)/prev)*100);if(pct>0)return `<span class="sr-compare up">▲ ${pct}% vs last year</span>`;if(pct<0)return `<span class="sr-compare down">▼ ${Math.abs(pct)}% vs last year</span>`;return `<span class="sr-compare">= same as last year</span>`;}
 
 function renderStats(){
-  const label=document.getElementById('month-label');
-  if(label) label.textContent=MONTHS_EN[S.statsMonth]+' '+S.statsYear;
-
+  document.getElementById('month-label').textContent=MONTHS_EN[S.statsMonth]+' '+S.statsYear;
   if(!S.allYearActs.length){document.getElementById('stats-content').innerHTML='<div class="empty-state"><div class="ei">📊</div><p>Load activities first.</p></div>';return;}
-
-  if(S.statsPeriod==='month'){
-    renderMonthStats();
-  } else if(S.statsPeriod==='year'){
-    renderYearStats();
-  } else {
-    renderYTDStats();
-  }
+  if(S.statsPeriod==='month') renderMonthStats();
+  else if(S.statsPeriod==='year') renderYearStats();
+  else renderYTDStats();
 }
 
 function renderMonthStats(){
-  const m=S.statsMonth, y=S.statsYear;
-  const ly=y-1;
-  const thisActs=S.allYearActs.filter(a=>{const d=new Date(a.start_date_local);return d.getMonth()===m&&d.getFullYear()===y;});
-  const lastActs=S.lastYearActs.filter(a=>{const d=new Date(a.start_date_local);return d.getMonth()===m&&d.getFullYear()===ly;});
-  const cur=aggActs(thisActs), prev=aggActs(lastActs);
-
+  const m=S.statsMonth,y=S.statsYear,ly=y-1;
+  const cur=aggActs(S.allYearActs.filter(a=>{const d=new Date(a.start_date_local);return d.getMonth()===m&&d.getFullYear()===y;}));
+  const prev=aggActs(S.lastYearActs.filter(a=>{const d=new Date(a.start_date_local);return d.getMonth()===m&&d.getFullYear()===ly;}));
   const html=Object.entries(SPORT_CONFIG).map(([type,cfg])=>{
-    const c=cur[type], p=prev[type];
+    const c=cur[type],p=prev[type];
     const showDist=type==='Ride'||type==='Run'||type==='Hike';
     const showElev=(type==='Ride'||type==='Hike')&&c.elev>0;
-    if(!c.count&&!p.count) return `<div class="stat-card"><div class="sc-header"><div class="sc-emoji">${cfg.emoji}</div><div class="sc-title">${cfg.label}</div></div><div style="font-size:0.82rem;color:var(--muted)">No activities</div></div>`;
+    if(!c.count&&!p.count)return `<div class="stat-card"><div class="sc-header"><div class="sc-emoji">${cfg.emoji}</div><div class="sc-title">${cfg.label}</div></div><div style="font-size:0.82rem;color:var(--muted)">No activities</div></div>`;
+    const maxVal=showDist?Math.max(c.dist,p.dist):Math.max(c.count,p.count);
     return `<div class="stat-card">
       <div class="sc-header"><div class="sc-emoji">${cfg.emoji}</div><div class="sc-title">${cfg.label}</div></div>
-      <div class="stat-row"><span class="sr-label">Sessions</span><div><span class="sr-val">${c.count}<span class="sr-unit">activities</span></span>${diffArrow(c.count,p.count)}</div></div>
-      <div class="stat-row"><span class="sr-label">Time</span><div><span class="sr-val">${fmtTime(c.time)}</span>${diffArrow(c.time,p.time)}</div></div>
-      ${showDist?`<div class="stat-row"><span class="sr-label">Distance</span><div><span class="sr-val">${fmtKm(c.dist)}<span class="sr-unit">km</span></span>${diffArrow(c.dist,p.dist)}</div></div>`:''}
-      ${showElev?`<div class="stat-row"><span class="sr-label">Elevation</span><div><span class="sr-val">${Math.round(c.elev)}<span class="sr-unit">m</span></span>${diffArrow(c.elev,p.elev)}</div></div>`:''}
-      ${p.count>0?`<div style="margin-top:8px"><div class="bar-chart">
-        <div class="bar-row"><span class="bar-year">${y}</span><div class="bar-track"><div class="bar-fill this-year" style="width:${Math.min(100,showDist?Math.round(c.dist/Math.max(c.dist,p.dist)*100):Math.round(c.count/Math.max(c.count,p.count)*100))}%"><span class="bar-val">${showDist?fmtKm(c.dist)+'km':c.count}</span></div></div></div>
-        <div class="bar-row"><span class="bar-year">${ly}</span><div class="bar-track"><div class="bar-fill last-year" style="width:${Math.min(100,showDist?Math.round(p.dist/Math.max(c.dist,p.dist)*100):Math.round(p.count/Math.max(c.count,p.count)*100))}%"><span class="bar-val">${showDist?fmtKm(p.dist)+'km':p.count}</span></div></div></div>
-      </div></div>`:''}
+      <div class="stat-row"><span class="sr-label">Sessions</span><div><span class="sr-val">${c.count}<span class="sr-unit">activities</span></span> ${diffArrow(c.count,p.count)}</div></div>
+      <div class="stat-row"><span class="sr-label">Time</span><div><span class="sr-val">${fmtTime(c.time)}</span> ${diffArrow(c.time,p.time)}</div></div>
+      ${showDist?`<div class="stat-row"><span class="sr-label">Distance</span><div><span class="sr-val">${fmtKm(c.dist)}<span class="sr-unit">km</span></span> ${diffArrow(c.dist,p.dist)}</div></div>`:''}
+      ${showElev?`<div class="stat-row"><span class="sr-label">Elevation</span><div><span class="sr-val">${Math.round(c.elev)}<span class="sr-unit">m</span></span> ${diffArrow(c.elev,p.elev)}</div></div>`:''}
+      ${p.count>0?`<div class="bar-chart">
+        <div class="bar-row"><span class="bar-year">${y}</span><div class="bar-track"><div class="bar-fill this-year" style="width:${maxVal?Math.round((showDist?c.dist:c.count)/maxVal*100):0}%"><span class="bar-val">${showDist?fmtKm(c.dist)+'km':c.count}</span></div></div></div>
+        <div class="bar-row"><span class="bar-year">${ly}</span><div class="bar-track"><div class="bar-fill last-year" style="width:${maxVal?Math.round((showDist?p.dist:p.count)/maxVal*100):0}%"><span class="bar-val">${showDist?fmtKm(p.dist)+'km':p.count}</span></div></div></div>
+      </div>`:''}
     </div>`;
   }).join('');
   document.getElementById('stats-content').innerHTML=html;
 }
 
 function renderYearStats(){
-  const y=new Date().getFullYear(), ly=y-1;
-  const cur=aggActs(S.allYearActs), prev=aggActs(S.lastYearActs);
+  // Year view: full year summary, NO comparison (meaningless mid-year)
+  const cur=aggActs(S.allYearActs);
   const html=Object.entries(SPORT_CONFIG).map(([type,cfg])=>{
-    const c=cur[type], p=prev[type];
+    const c=cur[type];
     const showDist=type==='Ride'||type==='Run'||type==='Hike';
-    if(!c.count&&!p.count) return `<div class="stat-card"><div class="sc-header"><div class="sc-emoji">${cfg.emoji}</div><div class="sc-title">${cfg.label}</div></div><div style="font-size:0.82rem;color:var(--muted)">No activities</div></div>`;
+    if(!c.count)return `<div class="stat-card"><div class="sc-header"><div class="sc-emoji">${cfg.emoji}</div><div class="sc-title">${cfg.label}</div></div><div style="font-size:0.82rem;color:var(--muted)">No activities yet</div></div>`;
     return `<div class="stat-card">
       <div class="sc-header"><div class="sc-emoji">${cfg.emoji}</div><div class="sc-title">${cfg.label}</div></div>
-      <div class="stat-row"><span class="sr-label">Sessions</span><div><span class="sr-val">${c.count}<span class="sr-unit">activities</span></span>${diffArrow(c.count,p.count)}</div></div>
-      <div class="stat-row"><span class="sr-label">Time</span><div><span class="sr-val">${fmtTime(c.time)}</span>${diffArrow(c.time,p.time)}</div></div>
-      ${showDist?`<div class="stat-row"><span class="sr-label">Distance</span><div><span class="sr-val">${fmtKm(c.dist)}<span class="sr-unit">km</span></span>${diffArrow(c.dist,p.dist)}</div></div>`:''}
-      ${(type==='Ride'||type==='Hike')&&c.elev>0?`<div class="stat-row"><span class="sr-label">Elevation</span><div><span class="sr-val">${Math.round(c.elev)}<span class="sr-unit">m</span></span>${diffArrow(c.elev,p.elev)}</div></div>`:''}
+      <div class="stat-row"><span class="sr-label">Sessions</span><span class="sr-val">${c.count}<span class="sr-unit">activities</span></span></div>
+      <div class="stat-row"><span class="sr-label">Time</span><span class="sr-val">${fmtTime(c.time)}</span></div>
+      ${showDist?`<div class="stat-row"><span class="sr-label">Distance</span><span class="sr-val">${fmtKm(c.dist)}<span class="sr-unit">km</span></span></div>`:''}
+      ${(type==='Ride'||type==='Hike')&&c.elev>0?`<div class="stat-row"><span class="sr-label">Elevation</span><span class="sr-val">${Math.round(c.elev)}<span class="sr-unit">m</span></span></div>`:''}
     </div>`;
   }).join('');
-  document.getElementById('stats-content').innerHTML=html;
+  document.getElementById('stats-content').innerHTML=`<div style="font-size:0.82rem;color:var(--muted);margin-bottom:12px">${CUR_YEAR} — full year summary so far</div>`+html;
 }
 
 function renderYTDStats(){
   const now=new Date();
-  const todayDoy=Math.floor((now-(new Date(now.getFullYear(),0,0)))/(1000*60*60*24));
-  const ly=now.getFullYear()-1;
-  const lyEquivDate=new Date(ly,now.getMonth(),now.getDate());
-  const lyDoy=Math.floor((lyEquivDate-(new Date(ly,0,0)))/(1000*60*60*24));
-
-  const curActs=S.allYearActs;
-  const lyActs=S.lastYearActs.filter(a=>{const d=new Date(a.start_date_local);const doy=Math.floor((d-(new Date(d.getFullYear(),0,0)))/(1000*60*60*24));return doy<=lyDoy;});
-
-  const cur=aggActs(curActs), prev=aggActs(lyActs);
-
+  const todayDoy=Math.floor((now-new Date(now.getFullYear(),0,0))/(864e5));
+  const ly=CUR_YEAR-1;
+  const lyDate=new Date(ly,now.getMonth(),now.getDate());
+  const lyDoy=Math.floor((lyDate-new Date(ly,0,0))/(864e5));
+  const lyActs=S.lastYearActs.filter(a=>{const d=new Date(a.start_date_local);return Math.floor((d-new Date(d.getFullYear(),0,0))/(864e5))<=lyDoy;});
+  const cur=aggActs(S.allYearActs), prev=aggActs(lyActs);
   const tiles=Object.entries(SPORT_CONFIG).map(([type,cfg])=>{
-    const c=cur[type], p=prev[type];
+    const c=cur[type],p=prev[type];
     const showDist=type==='Ride'||type==='Run'||type==='Hike';
+    const cv=showDist?c.dist:c.count*3600, pv=showDist?p.dist:p.count*3600;
     const mainVal=showDist?fmtKm(c.dist):c.count;
     const mainUnit=showDist?'km':'sessions';
     const prevVal=showDist?fmtKm(p.dist):p.count;
@@ -1003,13 +1117,10 @@ function renderYTDStats(){
       <div class="ytd-label">${cfg.label}</div>
       <div class="ytd-val">${mainVal}<span class="ytd-unit">${mainUnit}</span></div>
       <div class="ytd-diff ${diffClass}">${diffStr}</div>
-      <div style="font-size:0.68rem;color:var(--muted);margin-top:2px">vs ${prevVal}${showDist?' km':''} last year</div>
+      <div style="font-size:0.68rem;color:var(--muted);margin-top:2px">vs ${prevVal}${showDist?' km':' sessions'} in ${ly}</div>
     </div>`;
   }).join('');
-
-  document.getElementById('stats-content').innerHTML=`
-    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:12px">Year to date: day ${todayDoy} of ${now.getFullYear()} vs same point in ${ly}</div>
-    <div class="ytd-grid">${tiles}</div>`;
+  document.getElementById('stats-content').innerHTML=`<div style="font-size:0.82rem;color:var(--muted);margin-bottom:12px">Day ${todayDoy} of ${CUR_YEAR} vs same point in ${ly}</div><div class="ytd-grid">${tiles}</div>`;
 }
 
 function showStatus(id,msg,type){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.className=`status ${type} show`;}
